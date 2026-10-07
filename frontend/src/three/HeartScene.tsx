@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree, ThreeEvent } from '@react-three/fiber'
 import { Html, OrbitControls, useGLTF } from '@react-three/drei'
+import { GLTFLoader } from 'three-stdlib'
+import { suspend } from 'suspend-react'
 import { riskColor } from '../lib/risk'
 import { FlowParticles, Centerlines } from './FlowParticles'
 import type { VesselId } from '../lib/types'
@@ -115,7 +117,11 @@ export function HeartScene(props: SceneProps) {
   const { risks, uncertain, selected, onSelect, bpm, view, territory, flow, labels, beating, registry, centerlines, base } = props
   // meshopt-compressed (decoder bundled, no CDN). The static demo ships the same model as embedded .gltf JSON
   // because some static hosts only serve web media types.
-  const gltf = useGLTF(`${base}anatomy/${import.meta.env.VITE_STATIC_DEMO === '1' ? 'heart_scene.json' : 'heart_scene.glb'}`, false, true)
+  // A single-file build embeds the model bytes; parse them directly (no network request at all).
+  const embedded = (window as any).__CL_EMBED__?.glbBuffer as ArrayBuffer | undefined
+  const gltf: { scene: THREE.Group } = embedded
+    ? suspend(() => new Promise<any>((res, rej) => new GLTFLoader().parse(embedded, '', res, rej)), ['cardiolens-embedded-glb'])
+    : useGLTF(`${base}anatomy/${import.meta.env.VITE_STATIC_DEMO === '1' ? 'heart_scene.json' : 'heart_scene.glb'}`, false, true)
   const heartGroup = useRef<THREE.Group>(null!)
   const [hover, setHover] = useState<string | null>(null)
   const { camera, gl } = useThree()
@@ -137,7 +143,7 @@ export function HeartScene(props: SceneProps) {
     const thorax: [THREE.Material, number][] = [[bone, 0.5], [diaphragm, 0.35]]
 
     const root = gltf.scene.clone(true)
-    root.traverse((o) => {
+    root.traverse((o: THREE.Object3D) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       const id = mesh.name.replace(/_\d+$/, '')

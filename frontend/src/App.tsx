@@ -22,7 +22,12 @@ interface AppData {
   bundle: Bundle
 }
 
+// A fully self-contained build (single HTML file) can pre-load assets into window.__CL_EMBED__
+const EMBED: Record<string, any> | undefined = (window as any).__CL_EMBED__
+
 async function getJSON<T>(url: string): Promise<T> {
+  const key = url.replace(BASE, '').replace(/^\.?\//, '')
+  if (EMBED && EMBED[key]) return EMBED[key] as T
   const r = await fetch(url)
   if (!r.ok) throw new Error(`${url}: ${r.status}`)
   return r.json()
