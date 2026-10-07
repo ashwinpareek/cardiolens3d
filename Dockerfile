@@ -17,6 +17,10 @@ COPY config/ config/
 COPY data/ data/
 COPY frontend/public/data/ frontend/public/data/
 COPY --from=web /app/frontend/dist frontend/dist
+# Hugging Face Spaces runs containers as UID 1000; Render and others inject $PORT
+RUN useradd -m -u 1000 user && chown -R user /app
+USER user
+ENV PORT=8000
 EXPOSE 8000
-HEALTHCHECK CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", 8000)}/api/health')"
+CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
