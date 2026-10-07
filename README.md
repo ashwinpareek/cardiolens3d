@@ -1,3 +1,13 @@
+---
+title: CardioLens 3D
+emoji: 🫀
+colorFrom: red
+colorTo: blue
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # CardioLens 3D
 
 **Coronary artery disease risk, mapped onto a real 3D heart, with the reasons behind every number.**
