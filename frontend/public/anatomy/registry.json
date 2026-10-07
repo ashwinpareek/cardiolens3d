@@ -1,0 +1,43 @@
+{
+  "_comment": "Config-driven anatomy registry. Each part becomes a named node in heart_scene.glb. 'target' binds a mesh to a model output; adding a structure = adding an entry here.",
+  "territory_targets": ["LAD", "LCX", "RCA"],
+  "parts": [
+    {"id": "heart_wall", "label": "Myocardium (wall of heart)", "group": "heart", "fma": ["FMA7274"], "faces": 60000, "clean": true, "clean_frac": 0.0005,
+     "description": "Heart wall. Tinted by approximate coronary perfusion territory."},
+
+    {"id": "LM",  "label": "Left main coronary artery", "group": "coronary", "target": "LM", "fma": ["FMA4685"], "faces": 400, "parent": "aorta_asc",
+     "description": "Common trunk feeding LAD and LCX. Not separately predicted; shown with the higher of the LAD / LCX risks."},
+    {"id": "LAD", "label": "Left anterior descending (LAD)", "group": "coronary", "target": "LAD", "fma": ["FMA3862nsn"], "faces": 6000, "parent": "LM",
+     "description": "Runs in the anterior interventricular groove; supplies the anterior wall and anterior two-thirds of the septum."},
+    {"id": "LAD_septal", "label": "LAD septal perforators", "group": "coronary", "target": "LAD", "fma": ["FMA71670"], "faces": 800, "parent": "LAD"},
+    {"id": "LCX", "label": "Left circumflex (LCX)", "group": "coronary", "target": "LCX", "fma": ["FMA3895"], "faces": 3000, "parent": "LM",
+     "description": "Runs in the left atrioventricular groove; supplies the lateral and posterolateral wall."},
+    {"id": "RCA", "label": "Right coronary artery (RCA)", "group": "coronary", "target": "RCA", "fma": ["FMA3802"], "faces": 4000, "parent": "aorta_asc",
+     "description": "Runs in the right atrioventricular groove; supplies the right ventricle and, usually, the inferior wall."},
+    {"id": "RCA_marginal", "label": "RCA acute marginal branch", "group": "coronary", "target": "RCA", "fma": ["FMA3818"], "faces": 3000, "parent": "RCA"},
+    {"id": "RCA_PDA", "label": "Posterior descending artery (PDA)", "group": "coronary", "target": "RCA", "fma": ["FMA3840nsn"], "faces": 2500, "parent": "RCA"},
+    {"id": "RCA_PL", "label": "RCA posterolateral branch", "group": "coronary", "target": "RCA", "fma": ["FMA76994"], "faces": 1800, "parent": "RCA"},
+    {"id": "RCA_septal", "label": "RCA septal branches", "group": "coronary", "target": "RCA", "fma": ["FMA71669"], "faces": 600, "parent": "RCA_PDA"},
+
+    {"id": "aorta_asc", "label": "Ascending aorta", "group": "great_vessels", "fma": ["FMA3736"], "faces": 2000},
+    {"id": "aorta_arch", "label": "Aortic arch", "group": "great_vessels", "fma": ["FMA3768"], "faces": 3000},
+    {"id": "aorta_desc", "label": "Descending aorta", "group": "great_vessels", "fma": ["FMA3784"], "faces": 5000},
+    {"id": "svc", "label": "Superior vena cava", "group": "great_vessels", "fma": ["FMA4720"], "faces": 1500},
+    {"id": "ivc", "label": "Inferior vena cava", "group": "great_vessels", "fma": ["FMA10951"], "faces": 2500},
+    {"id": "pulm_artery", "label": "Pulmonary arteries", "group": "great_vessels", "fma": ["FMA66326"], "faces": 14000},
+    {"id": "pulm_vein", "label": "Pulmonary veins", "group": "great_vessels", "fma": ["FMA66643"], "faces": 9000},
+    {"id": "cardiac_veins", "label": "Cardiac veins & coronary sinus", "group": "veins", "fma": ["FMA4706", "FMA4707", "FMA4713", "FMA71567", "FMA76751"], "faces": 6000},
+
+    {"id": "lungs", "label": "Lungs", "group": "thorax", "fma": ["FMA7333", "FMA7337", "FMA7370", "FMA7371", "FMA7383"], "faces": 16000},
+    {"id": "trachea", "label": "Trachea", "group": "thorax", "fma": ["FMA7394"], "faces": 2500},
+    {"id": "diaphragm", "label": "Diaphragm", "group": "thorax", "fma": ["FMA13295"], "faces": 8000, "clean": true},
+    {"id": "sternum", "label": "Sternum", "group": "skeleton", "fma": ["FMA7487"], "faces": 2500},
+    {"id": "clavicles", "label": "Clavicles", "group": "skeleton", "fma": ["FMA13322", "FMA13323"], "faces": 2500},
+    {"id": "ribs", "label": "Ribs & costal cartilage", "group": "skeleton",
+     "fma": ["BP24", "BP28", "FMA7857", "FMA7875", "FMA7882", "FMA7886", "FMA7909", "FMA7913", "FMA7957", "FMA7976", "FMA7987", "FMA8005", "FMA8012", "FMA8031", "FMA8039", "FMA8058", "FMA8066", "FMA8070", "FMA8093", "FMA8112", "FMA8148", "FMA8167", "FMA8175", "FMA8194", "FMA8202", "FMA8221", "FMA8229", "FMA8248", "FMA8256", "FMA8275", "FMA8283", "FMA8310", "FMA8364", "FMA8391", "FMA8445", "FMA8472", "FMA8531", "FMA8532", "FMA8533", "FMA8534"],
+     "faces": 30000},
+    {"id": "spine", "label": "Thoracic spine", "group": "skeleton",
+     "fma": ["FMA9165", "FMA9187", "FMA9209", "FMA9248", "FMA9922", "FMA9945", "FMA9968", "FMA9991", "FMA10014", "FMA10037", "FMA10059", "FMA10081"], "faces": 9000},
+    {"id": "skin", "label": "Body surface", "group": "body", "fma": ["FMA7163"], "faces": 24000, "crop_z": [930, 1480], "clean": true}
+  ]
+}

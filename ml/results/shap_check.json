@@ -1,0 +1,15 @@
+{
+ "CAD_linear_max_abs_diff": 4.440892098500626e-16,
+ "LAD": {
+  "pearson_r_mean": 0.921186780006236,
+  "top5_overlap_mean": 0.8666666666666668
+ },
+ "LCX": {
+  "pearson_r_mean": 0.9383286984938511,
+  "top5_overlap_mean": 0.8666666666666667
+ },
+ "RCA": {
+  "pearson_r_mean": 0.9294689774208017,
+  "top5_overlap_mean": 0.9333333333333335
+ }
+}

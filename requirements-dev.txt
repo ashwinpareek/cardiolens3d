@@ -1,0 +1,14 @@
+-r requirements.txt
+# Algorithm comparison (ml/compare_models.py), SHAP cross-check, tests
+lightgbm==4.7.0
+xgboost==3.4.1
+catboost==1.2.10
+shap==0.52.0
+pytest==9.1.1
+httpx==0.28.1
+# Anatomy pipeline (anatomy/build_anatomy.py)
+trimesh==5.1.1
+fast-simplification
+scikit-image==0.26.0
+networkx==3.6.1
+scipy==1.18.1

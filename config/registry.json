@@ -1,0 +1,17 @@
+{
+  "_comment": "Single place that binds model outputs to anatomy and UI. Add a target here, add a model for it in ml/cardio_model.py, and tag its meshes with the same id in anatomy/anatomy_registry.json: the viewer, dashboard and API pick it up without code changes elsewhere.",
+  "targets": [
+    {"id": "CAD", "label": "Coronary artery disease", "kind": "patient", "parent": null,
+     "positive": "CAD present", "negative": "CAD absent"},
+    {"id": "LAD", "label": "Left anterior descending", "kind": "vessel", "parent": "CAD",
+     "meshes": ["LAD", "LAD_septal", "LM"], "aha_segments": [1, 2, 7, 8, 13, 14, 17],
+     "supplies": "Anterior wall, anterior two-thirds of the septum, apex"},
+    {"id": "LCX", "label": "Left circumflex", "kind": "vessel", "parent": "CAD",
+     "meshes": ["LCX", "LM"], "aha_segments": [5, 6, 11, 12, 16],
+     "supplies": "Lateral and posterolateral wall"},
+    {"id": "RCA", "label": "Right coronary artery", "kind": "vessel", "parent": "CAD",
+     "meshes": ["RCA", "RCA_marginal", "RCA_PDA", "RCA_PL", "RCA_septal"], "aha_segments": [3, 4, 9, 10, 15],
+     "supplies": "Right ventricle, inferior wall, inferior septum"}
+  ],
+  "risk_scale": {"stops": [[0.0, "#2fb5a3"], [0.35, "#8fc06a"], [0.55, "#e7b443"], [0.75, "#e07a3c"], [1.0, "#d43d3d"]]}
+}

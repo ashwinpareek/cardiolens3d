@@ -1,0 +1,43 @@
+{
+  "source": "BodyParts3D, (c) 2008 Life Science Integrated Database Center, CC BY-SA 2.1 JP",
+  "faces": {
+    "heart_wall": 60000,
+    "LM": 252,
+    "LAD": 6000,
+    "LAD_septal": 800,
+    "LCX": 3000,
+    "RCA": 4000,
+    "RCA_marginal": 3000,
+    "RCA_PDA": 2500,
+    "RCA_PL": 1800,
+    "RCA_septal": 600,
+    "aorta_asc": 2000,
+    "aorta_arch": 3000,
+    "aorta_desc": 5000,
+    "svc": 1500,
+    "ivc": 2500,
+    "pulm_artery": 14000,
+    "pulm_vein": 9000,
+    "cardiac_veins": 6000,
+    "lungs": 16000,
+    "trachea": 2500,
+    "diaphragm": 8000,
+    "sternum": 2500,
+    "clavicles": 2500,
+    "ribs": 30000,
+    "spine": 9000,
+    "skin": 24000
+  },
+  "total_faces": 219452,
+  "territory_fraction": {
+    "LAD": 0.17926763232706105,
+    "LCX": 0.15682956545282253,
+    "RCA": 0.6639028022201164
+  },
+  "centre_mm": [
+    21.422300338745117,
+    -121.84779739379883,
+    1237.010009765625
+  ],
+  "scale": 0.01
+}

@@ -1,0 +1,10 @@
+# Serving + training the deployed model
+numpy==2.5.3
+pandas==3.0.5
+scikit-learn==1.9.1
+joblib==1.6.0
+openpyxl==3.1.5
+interpret-core==0.7.8
+fastapi==0.142.2
+uvicorn==0.53.0
+pydantic==2.13.5
