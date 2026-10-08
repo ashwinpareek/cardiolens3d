@@ -31,6 +31,7 @@ export interface SceneProps {
   focusKey?: number       // bump to re-fly to the same preset
   compact?: boolean       // small embedded viewer (what-if page)
   shift?: number          // 0..0.5: slide the rendered heart left (fraction of width) to make room for a side panel
+  autoRotate?: boolean    // slow showcase turntable, stopped by the parent on first interaction
 }
 
 export type FocusId = 'overview' | 'LAD' | 'LCX' | 'RCA' | 'inferior' | 'thorax'
@@ -378,7 +379,7 @@ export function HeartScene(props: SceneProps) {
 
   return (
     <>
-      <OrbitControls ref={controls} makeDefault enableDamping dampingFactor={0.08} minDistance={1.4} maxDistance={14} />
+      <OrbitControls ref={controls} makeDefault enableDamping dampingFactor={0.08} autoRotate={!!props.autoRotate} autoRotateSpeed={1.3} minDistance={1.4} maxDistance={14} />
       <hemisphereLight args={['#dfeaf2', '#3a2626', 0.9]} />
       <directionalLight position={[2.5, 3, 4]} intensity={1.6} />
       <directionalLight position={[-3, 1, -3]} intensity={0.7} color="#9fc4ff" />

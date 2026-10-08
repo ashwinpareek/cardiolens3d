@@ -43,7 +43,12 @@ export default function App() {
   const [selected, setSelected] = useState<VesselId | null>(null)
   const [explainTarget, setExplainTarget] = useState<TargetId>('CAD')
   const [report, setReport] = useState<ReportData | null>(null)
-  const [mode, setMode] = useState<'guide' | 'expert'>(() => (location.hash === '#expert' ? 'expert' : 'guide'))
+  // Opens on the expert workspace so the 3D heart is the first thing anyone sees; #guide (or a guide
+  // step such as #why) deep-links straight into the step-by-step view.
+  const [mode, setMode] = useState<'guide' | 'expert'>(() =>
+    (['#guide', '#patient', '#heart', '#why', '#whatif', '#report'].includes(location.hash) ? 'guide' : 'expert'))
+  const [nudge, setNudge] = useState(() => { try { return localStorage.getItem('cl-guide-nudge') !== '0' } catch { return true } })
+  const closeNudge = () => { setNudge(false); try { localStorage.setItem('cl-guide-nudge', '0') } catch { /* ignore */ } }
 
   // ---------------------------------------------------------------- load
   useEffect(() => {
@@ -55,8 +60,11 @@ export default function App() {
           getJSON<Centerlines>(`${BASE}anatomy/centerlines.json`),
         ])
         setData(d); setRegistry(reg.parts); setCenterlines(cl)
-        const start = d.presets[1] ?? d.presets[0]
-        setInputs(start.inputs); setBaseline(start.inputs); setSource(`preset:${start.id}`)
+        // Showcase start: dataset patient #35 (id 34) has two narrowed arteries (LAD, RCA) and a clear LCX on
+        // angiography, all three called correctly, so the heart opens with a clear red/teal contrast.
+        const show = d.patients.find((p) => p.id === 34)
+        if (show) { setInputs(show.inputs); setBaseline(show.inputs); setSource('dataset:34') }
+        else { const start = d.presets[1] ?? d.presets[0]; setInputs(start.inputs); setBaseline(start.inputs); setSource(`preset:${start.id}`) }
       } catch (e) {
         setError(String(e))
       }
@@ -149,11 +157,22 @@ export default function App() {
           </svg>
           <h1>CardioLens 3D</h1>
         </div>
+        <div className="guide-cta-wrap">
+          <button className="btn guide-cta" onClick={() => setMode('guide')} title="Switch to the guided, beginner-friendly view">
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M3 2l9 5-9 5z" fill="currentColor" /></svg>
+            Guided view
+          </button>
+          {nudge && (
+            <span className="guide-nudge" role="note">
+              <span aria-hidden>←</span> <span><b>New to this?</b> Plain-English tour, step by step.</span>
+              <button className="nudge-x" onClick={closeNudge} aria-label="Dismiss hint">×</button>
+            </span>
+          )}
+        </div>
         <div className="disclaimer" role="note">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden><path d="M8 1.5l7 12.5H1z" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M8 6v4M8 11.6v.4" stroke="currentColor" strokeWidth="1.6" /></svg>
           <span><b>Decision support and education only.</b> Not a diagnosis and not a substitute for angiography, CT coronary angiography or a clinician's judgement.</span>
         </div>
-        <button className="btn" onClick={() => setMode('guide')} title="Switch to the guided, beginner-friendly view">Guided view</button>
         <button className="btn" title="Download a 2-page PDF report" onClick={() => {
           if (!pred) return
           const c = document.querySelector('.lightbox canvas') as HTMLCanvasElement | null

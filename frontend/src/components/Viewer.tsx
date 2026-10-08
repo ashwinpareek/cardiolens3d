@@ -18,13 +18,19 @@ interface Props {
 }
 
 export function Viewer(p: Props) {
+  const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const [view, setView] = useState<ViewMode>('heart')
   const [layers, setLayers] = useState({ territory: true, flow: true, labels: true, beating: true })
+  const [lift, setLift] = useState(0)
+  const [cut, setCut] = useState(0)
+  const [angio, setAngio] = useState(false)
+  // showcase turntable: the heart turns slowly on load and stops the moment anyone touches it
+  const [spin, setSpin] = useState(!reduced)
   const toggle = (k: keyof typeof layers) => setLayers((s) => ({ ...s, [k]: !s[k] }))
-  const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const stop = () => spin && setSpin(false)
 
   return (
-    <div className="lightbox">
+    <div className={`lightbox ${angio ? 'is-angio' : ''}`} onPointerDown={stop} onWheel={stop}>
       <Canvas
         camera={{ position: [1.25, 0.45, 2.75], fov: 35, near: 0.05, far: 60 }}
         dpr={[1, 1.75]}
@@ -40,14 +46,22 @@ export function Viewer(p: Props) {
             flow={layers.flow && !reduced}
             labels={layers.labels}
             beating={layers.beating && !reduced}
+            lift={lift} cut={cut} angio={angio}
+            autoRotate={spin}
           />
         </Suspense>
       </Canvas>
 
       <div className="overlay-top">
         <div className="toolbar" role="group" aria-label="View">
-          <button aria-pressed={view === 'heart'} onClick={() => setView('heart')}>Heart</button>
-          <button aria-pressed={view === 'torso'} onClick={() => setView('torso')}>Thorax</button>
+          <button aria-pressed={view === 'heart' && !angio} onClick={() => { setView('heart'); setAngio(false) }}>Heart</button>
+          <button aria-pressed={view === 'torso'} onClick={() => { setView('torso'); setAngio(false); setCut(0) }}>Thorax</button>
+          <button aria-pressed={angio} onClick={() => { setAngio(!angio); setView('heart') }} title="Simulated angiogram look">X-ray</button>
+        </div>
+        <div className="toolbar" role="group" aria-label="Anatomy">
+          <button aria-pressed={lift > 0} onClick={() => setLift(lift > 0 ? 0 : 1)} title="Exploded view: lift the coronary tree off the surface">Lift arteries</button>
+          <button aria-pressed={cut > 0} onClick={() => { setCut(cut > 0 ? 0 : 0.75); setView('heart') }} title="Cut away the front wall to show the chambers">Cut open</button>
+          <button aria-pressed={spin} onClick={() => setSpin(!spin)} title="Turntable rotation">Spin</button>
         </div>
         <div className="toolbar" role="group" aria-label="Layers">
           <button aria-pressed={layers.territory} onClick={() => toggle('territory')}>Territories</button>

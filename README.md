@@ -34,7 +34,9 @@ Built for **Multimodal AI Hackathon 2026 (IIT Mandi), Track A: Cardiovascular Ri
 
 ## Two ways to use it
 
-**Guided view** (default) is for anyone, including people with no medical background. It walks through five steps:
+The app **opens on the expert view** so the 3D heart is the first thing you see: it turns slowly until you touch it, coloured by a real dataset patient (#35) whose angiogram showed a narrowed LAD and RCA and a clear LCX. A highlighted **Guided view** button sits next to the logo. Add `#guide` to the URL to open straight in the guided view.
+
+**Guided view** is for anyone, including people with no medical background. It walks through five steps:
 
 1. **Patient:** pick one of seven example patients, four of them real dataset cases with their angiography result, or answer a short quick-check form. All 54 fields are one click away.
 2. **Heart:** the 3D heart has a narrated **guided tour** ("Explain this heart"). You can **cut it open** to see the chambers, **lift the arteries** off the surface (exploded view), switch to an **X-ray / angiogram look**, or see where the heart sits **in the body**. A live **ECG strip** is drawn from the patient's ECG findings and pulse, and you can tap an artery to fly to it.
@@ -44,7 +46,7 @@ Built for **Multimodal AI Hackathon 2026 (IIT Mandi), Track A: Cardiovascular Ri
 
 Underlined terms (LAD, EF, RWMA, stenosis, conformal set and others) show plain-English definitions on hover or tap.
 
-**Expert view** keeps everything on one screen for clinicians and judges: all inputs, the 3D viewer, the AHA bullseye, waterfall explanations, measurements, similar patients and the full model-evidence tab.
+**Expert view** (default) keeps everything on one screen for clinicians and judges: all inputs, the 3D viewer (with X-ray, lift-arteries, cut-open and spin controls), the AHA bullseye, waterfall explanations, measurements, similar patients and the full model-evidence tab.
 
 ## What makes it different
 
