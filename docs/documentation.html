@@ -48,7 +48,7 @@
 <p class="meta">Multimodal AI Hackathon 2026 · IIT Mandi · Track A: Cardiovascular Risk Visualization &amp; Prediction · Ashwin Pareek</p>
 <div class="warn"><b>Clinical safety.</b> CardioLens is for decision support and education only. Its predictions are not a diagnosis and do not replace coronary angiography, CT coronary angiography or a clinician's judgement. The same notice is permanently visible in the application header and on every exported report.</div>
 
-<figure><img src="img/app_main.png" alt="CardioLens main screen"><figcaption>Figure 1. The application with a "prior-infarct pattern" patient: inputs (left), the BodyParts3D heart with vessels coloured by predicted stenosis probability and territory tinting (centre), assessment with conformal verdict, AHA bullseye and exact attributions (right), and physiological measurements with their contributions (bottom).</figcaption></figure>
+<figure><img src="img/guide-heart.png" alt="CardioLens guided heart view"><figcaption>Figure 1. Guided view, step 2 of 5: the BodyParts3D heart with arteries lifted off the surface (exploded view), each coloured by its own predicted stenosis probability, a live ECG drawn from the ECG inputs, the CAD gauge with its 90% range, and plain-language artery verdicts. An Expert view shows every panel at once.</figcaption></figure>
 
 <h2>1. Problem and approach</h2>
 <p>Risk calculators return a single percentage, but cardiologists reason in arteries and territories. Track A asks for a system that predicts overall CAD and LAD/LCX/RCA stenosis from routine clinical data and maps those predictions onto an interactive 3D anatomy, with interpretable explanations. CardioLens does this with four design decisions:</p>
@@ -193,12 +193,13 @@
 <li>Particles move along the centrelines, slowing as risk rises. This is a visual metaphor, not a haemodynamic simulation, and it is labelled as such.</li>
 <li>The heart beats with a systole/diastole curve at the patient's pulse-rate input.</li>
 <li>Clicking a vessel selects it everywhere (3D, list, bullseye, explanation); hover names the structure. Heart ⇄ Thorax dissolves the thorax with a radial-fade shader.</li>
+<li>Guided tour (camera path with captions written from the prediction), a cross-section clipping plane with shaded chamber walls, an exploded "lift arteries" view, an angiogram-style X-ray look, focus mode for the selected artery, and a synthetic ECG whose morphology follows the ECG inputs.</li>
 </ul>
 <p><b>Performance without a GPU:</b> about 219 k triangles, no shadow maps or HDR environment, adaptive DPR, a low-power WebGL context and one draw call per part. It stays interactive on integrated graphics and renders correctly even on a software rasteriser (SwiftShader, used for all screenshots here).</p>
 <p><b>Honest mapping.</b> The dataset gives vessel-level labels, not lesion positions. CardioLens therefore colours whole vessels and states this on the canvas. RWMA is treated as an input, not a lesion map. The bullseye uses the standard AHA segment → artery assignment and is labelled as the expected ischaemic territory.</p>
 
 <!-- ============================================================ PAGE 5 -->
-<h2 class="pb">6. System integration and clinical dashboard</h2>
+<h2>6. System integration and clinical dashboard</h2>
 <div class="two">
 <div>
 <p><b>Data flow.</b> Every edit re-scores the patient (60 ms debounce): <code>POST /api/predict</code> computes in under 1 ms, or the in-browser engine in about 1–9 ms. The result drives the 3D materials and every dashboard panel at once.</p>
@@ -211,15 +212,16 @@
 <p><b>Extensibility.</b> Three registries decouple the layers: <code>ml/features.py</code> (clinical inputs), <code>config/registry.json</code> (targets, their meshes and AHA segments) and <code>anatomy/anatomy_registry.json</code> (meshes by FMA id, with an optional <code>target</code> binding). A new lab value, vessel target or anatomical structure is a registry entry plus a re-run; the UI and API need no code changes.</p>
 </div>
 <div>
+<p><b>Two views.</b> A <i>guided view</i> walks beginners through five steps (Patient → Heart → Why → What if → Report), with a narrated 3D tour, glossary tooltips on every technical term, and a one-click PDF report. An <i>expert view</i> shows every panel at once.</p>
 <p><b>Dashboard components</b> (brief §3):</p>
 <ul>
 <li><b>Assessment:</b> CAD probability with band, 90% interval and conformal verdict. Per-vessel bars show the probability fill, interval whisker and operating threshold.</li>
 <li><b>AHA 17-segment bullseye</b> coloured by vessel risk and linked to the 3D selection.</li>
-<li><b>Why this estimate:</b> a plain-language sentence generated from the attributions, plus a waterfall of the top factors with their values, for CAD or any vessel.</li>
+<li><b>Why this estimate:</b> a generated plain-language sentence, a SHAP force plot, odds-multiplier reason cards, a body-system breakdown and a feature × target contribution heatmap (the dual-encoded format clinicians preferred in a 206-clinician study), for CAD or any vessel.</li>
 <li><b>Measurements:</b> every physiological value next to its reference range (with high/low flag), its signed contribution and its share of the total attribution (brief §3c).</li>
 <li><b>Modifiable factors:</b> re-scores with one out-of-range factor moved to its range limit, with one-click "apply". Labelled as model sensitivity, not treatment effect. Counter-intuitive directions (e.g. LDL, plausibly reflecting statin treatment in known disease) are flagged.</li>
 <li><b>Similar patients:</b> the 12 nearest dataset patients (importance-weighted distance) with their actual angiography results and out-of-fold scores.</li>
-<li><b>Model evidence</b> (all of §4, inside the app) and <b>Export report</b> (printable A4 summary with the 3D snapshot and disclaimer).</li>
+<li><b>Model evidence</b> (all of §4, inside the app) and <b>Download report</b>: a 2-page A4 PDF built in the browser (3D snapshot, estimates, reasons, measurements, validation, disclaimer), plus CSV and JSON exports.</li>
 </ul>
 </div>
 </div>

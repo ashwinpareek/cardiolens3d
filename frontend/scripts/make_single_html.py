@@ -7,7 +7,9 @@ Use an uncompressed GLB (straight from anatomy/build_anatomy.py, before the mesh
 """
 import json, base64, glob, sys
 B, glbpath, out, csp = sys.argv[1], sys.argv[2], sys.argv[3], (sys.argv[4] if len(sys.argv) > 4 else '')
-js = open(glob.glob(B + '/assets/*.js')[0]).read()
+import re
+entry = re.search(r'src="\./(assets/[^"]+\.js)"', open(B + '/index.html').read()).group(1)
+js = open(f'{B}/{entry}').read()
 css = open(glob.glob(B + '/assets/*.css')[0]).read()
 emb = {k: json.load(open(f'{B}/{k}')) for k in ['data/app_data.json', 'anatomy/registry.json', 'anatomy/centerlines.json']}
 glb = base64.b64encode(open(glbpath, 'rb').read()).decode()

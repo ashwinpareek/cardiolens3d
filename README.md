@@ -32,11 +32,26 @@ Built for **Multimodal AI Hackathon 2026 (IIT Mandi), Track A: Cardiovascular Ri
 
 ---
 
+## Two ways to use it
+
+**Guided view** (default) is for anyone, including people with no medical background. It walks through five steps:
+
+1. **Patient:** pick one of seven example patients, four of them real dataset cases with their angiography result, or answer a short quick-check form. All 54 fields are one click away.
+2. **Heart:** the 3D heart has a narrated **guided tour** ("Explain this heart"). You can **cut it open** to see the chambers, **lift the arteries** off the surface (exploded view), switch to an **X-ray / angiogram look**, or see where the heart sits **in the body**. A live **ECG strip** is drawn from the patient's ECG findings and pulse, and you can tap an artery to fly to it.
+3. **Why:** a SHAP **force plot**, cards showing what raises and what lowers the risk (as odds multipliers), a breakdown of which part of the check-up matters most, a **feature × target heatmap**, measurement tiles against normal ranges, and the 12 most similar real patients with their outcomes.
+4. **What if:** move blood pressure, cholesterol, sugar, weight or smoking and watch the heart and the before/after bars update. One-tap scenarios are included.
+5. **Report:** download a **2-page PDF** with the 3D snapshot, estimates, reasons, body-system chart, measurement table and model validation. The same data is also available as CSV or JSON.
+
+Underlined terms (LAD, EF, RWMA, stenosis, conformal set and others) show plain-English definitions on hover or tap.
+
+**Expert view** keeps everything on one screen for clinicians and judges: all inputs, the 3D viewer, the AHA bullseye, waterfall explanations, measurements, similar patients and the full model-evidence tab.
+
 ## What makes it different
 
 | | |
 |---|---|
 | **Real anatomy, real vessels** | The heart, the coronary tree (LAD with diagonals and septals, LCX, RCA with marginal, PDA and posterolateral branches), the great vessels, lungs, ribs and body surface all come from **BodyParts3D**. Each coronary branch is its own named mesh, bound to its model output through a config registry. |
+| **Interactive anatomy** | A guided camera tour narrated from the patient's own prediction, a cross-section cut, an exploded "lift arteries" view, an angiogram (X-ray) look, focus mode for the selected artery, clickable artery hotspots, and a synthetic ECG whose waveform follows the ECG inputs (Q waves, ST changes, T inversion, LVH, bundle branch block) at the patient's pulse rate. |
 | **Spatial risk mapping** | Vessels are coloured by calibrated probability. The myocardium is tinted by **perfusion territory**, using per-vertex soft assignment to the nearest coronary tree. An **AHA 17-segment bullseye** mirrors it in 2D. **Flow particles** run along centrelines extracted from the vessel meshes, and the heart **beats at the patient's pulse-rate input**. |
 | **Anatomically consistent model** | P(vessel) = P(CAD) × P(vessel \| CAD). On identical folds this matches the discrimination of direct vessel models and improves calibration for all three vessels. It also removes the **704** out-of-fold cases where direct models rated a vessel as more likely stenotic than CAD itself. A red artery can never appear on a "no CAD" heart. |
 | **Validation of the whole pipeline** | Repeated (5×5) outer CV, with algorithm choice, hyper-parameters, Platt calibration, Youden thresholds and conformal quantiles all fit **inside** each training fold. 9 algorithms were compared with nested CV. Sanity checks include a label-permutation test (AUC 0.49) and a leakage demonstration (AUC 0.997 if the vessel columns were used as inputs). |

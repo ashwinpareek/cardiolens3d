@@ -8,19 +8,15 @@ import { predictLocal, Bundle } from './lib/engine'
 import type { DatasetPatient, FeatureSpec, Inputs, ModelCard, Prediction, TargetId, VesselId } from './lib/types'
 import type { AnatomyPart } from './three/HeartScene'
 import type { Centerlines } from './three/FlowParticles'
+import { AppCtx, AppData } from './lib/ctx'
+import { GuideApp } from './guide/GuideApp'
+import { buildPdf, downloadBlob } from './lib/report'
+import { findSimilar } from './lib/explain'
+import { sourceLabel } from './guide/StepReport'
 
 const BASE = import.meta.env.BASE_URL
 // Static hosted demo (no model server, no print dialog): set VITE_STATIC_DEMO=1 at build time
 const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === '1'
-
-interface AppData {
-  features: FeatureSpec[]
-  patients: DatasetPatient[]
-  presets: Preset[]
-  card: ModelCard
-  similar_weights: Record<string, number>
-  bundle: Bundle
-}
 
 // A fully self-contained build (single HTML file) can pre-load assets into window.__CL_EMBED__
 const EMBED: Record<string, any> | undefined = (window as any).__CL_EMBED__
@@ -47,6 +43,7 @@ export default function App() {
   const [selected, setSelected] = useState<VesselId | null>(null)
   const [explainTarget, setExplainTarget] = useState<TargetId>('CAD')
   const [report, setReport] = useState<ReportData | null>(null)
+  const [mode, setMode] = useState<'guide' | 'expert'>(() => (location.hash === '#expert' ? 'expert' : 'guide'))
 
   // ---------------------------------------------------------------- load
   useEffect(() => {
@@ -131,8 +128,17 @@ export default function App() {
   if (error) return <div className="loading" style={{ color: 'var(--ink)' }}>Could not load the model data ({error}). Run <code>python ml/train_final.py</code> to generate it.</div>
   if (!data) return <div className="loading" style={{ color: 'var(--ink)', position: 'fixed' }}>Loading model and anatomy…</div>
 
+  const ctx = {
+    data, registry, centerlines, server, inputs, baseline, source, pred, selected, setSelected, explainTarget, setExplainTarget,
+    onChange, load, setInputs, risks, uncertain, base: BASE, staticDemo: STATIC_DEMO, setMode,
+  }
+
+  if (mode === 'guide') {
+    return <AppCtx.Provider value={ctx}><GuideApp /></AppCtx.Provider>
+  }
+
   return (
-    <>
+    <AppCtx.Provider value={ctx}>
     <Report data={report} pred={pred} features={data.features} inputs={inputs} alpha={data.card.alpha} card={data.card} />
     <div className="app">
       <header className="topbar">
@@ -142,13 +148,20 @@ export default function App() {
             <path d="M3 12h4l2-3 3 6 2-3h7" fill="none" stroke="#d43d3d" strokeWidth="1.6" strokeLinejoin="round" />
           </svg>
           <h1>CardioLens 3D</h1>
-          <small>Coronary risk mapped onto anatomy</small>
         </div>
         <div className="disclaimer" role="note">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden><path d="M8 1.5l7 12.5H1z" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M8 6v4M8 11.6v.4" stroke="currentColor" strokeWidth="1.6" /></svg>
           <span><b>Decision support and education only.</b> Not a diagnosis and not a substitute for angiography, CT coronary angiography or a clinician's judgement.</span>
         </div>
-        {!STATIC_DEMO && <button className="btn" onClick={exportReport} title="Print or save a one-page PDF summary">Export report</button>}
+        <button className="btn" onClick={() => setMode('guide')} title="Switch to the guided, beginner-friendly view">Guided view</button>
+        <button className="btn" title="Download a 2-page PDF report" onClick={() => {
+          if (!pred) return
+          const c = document.querySelector('.lightbox canvas') as HTMLCanvasElement | null
+          const doc = buildPdf({ pred, inputs, features: data.features, card: data.card, source: sourceLabel(source, data.presets),
+            snapshot: c ? c.toDataURL('image/png') : null, similar: findSimilar(data.patients, data.features, data.similar_weights, inputs) })
+          downloadBlob(`cardiolens-report-${new Date().toISOString().slice(0, 10)}.pdf`, doc.output('blob'))
+        }}>Download PDF</button>
+        {!STATIC_DEMO && <button className="btn ghost" onClick={exportReport} title="Print a one-page summary">Print</button>}
         <div className="engine" title={server ? 'Predictions computed by the FastAPI model server' : 'No server reachable: predictions computed in this browser from the same exported model'}>
           Model: <b>{server ? 'server' : 'in-browser'}</b>{pred ? ` · ${pred.ms.toFixed(pred.ms < 10 ? 1 : 0)} ms` : ''}
         </div>
@@ -171,6 +184,6 @@ export default function App() {
           bundle={data.bundle} onApply={(patch) => setInputs((s) => ({ ...s, ...patch }))} />
       </div>
     </div>
-    </>
+    </AppCtx.Provider>
   )
 }

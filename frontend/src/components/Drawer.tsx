@@ -155,7 +155,7 @@ function Similar({ features, inputs, patients, onLoadPatient, similarWeights }: 
 }
 
 /* ------------------------------------------------------------------ evidence */
-function Evidence({ card }: { card: ModelCard }) {
+export function Evidence({ card }: { card: ModelCard }) {
   const t = card.targets
   const ser = (fn: (id: TargetId) => [number, number][], meta?: (id: TargetId) => string[]) =>
     TARGETS.map((id) => ({ id, label: id, color: SERIES_COLORS[id], pts: fn(id), meta: meta?.(id) }))

@@ -6,6 +6,7 @@ export function valueText(f: FeatureSpec, v: number | string): string {
     if (f.key === 'sex_male') return Number(v) ? 'male' : 'female'
     return Number(v) ? 'yes' : 'no'
   }
+  if (f.key === 'rwma') return Number(v) ? `${v} region${Number(v) > 1 ? 's' : ''}` : 'none'
   if (f.options) {
     const o = f.options.find(([x]) => String(x) === String(v))
     if (o) return o[1]
