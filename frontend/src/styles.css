@@ -716,3 +716,16 @@ table.heat { border-collapse: collapse; width: 100%; margin-top: 6px; }
 .toolbar button { white-space: nowrap; }
 @media (max-width: 1600px) { .lb-note { display: none; } }
 .brand h1 { white-space: nowrap; }
+
+/* ---- fixes: sticky table headers flush with the scroll edge (no gap rows can show through) */
+.sheet-body { padding-top: 0; }
+.sheet-body > :first-child { margin-top: 16px; }
+.drawer-body { padding-top: 0; }
+.drawer-body > :first-child { margin-top: 12px; }
+table.data th { z-index: 2; box-shadow: 0 1px 0 var(--line); }
+/* ---- the 3D canvas can never paint outside its box, whatever the browser or zoom */
+.lightbox { overflow: hidden; contain: layout paint; }
+.lightbox > div:first-child { position: absolute !important; inset: 0; }
+.stage { overflow: hidden; contain: layout paint; }
+/* ---- 3D toolbars wrap onto a second row on narrower screens instead of spilling over the side panels */
+.overlay-top { flex-wrap: wrap; }

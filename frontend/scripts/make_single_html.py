@@ -15,7 +15,11 @@ emb = {k: json.load(open(f'{B}/{k}')) for k in ['data/app_data.json', 'anatomy/r
 glb = base64.b64encode(open(glbpath, 'rb').read()).decode()
 safe = lambda t: t.replace('</script', '<\\/script')
 head = f'<meta http-equiv="Content-Security-Policy" content="{csp}">\n' if csp else ''
-html = f'''{head}<title>CardioLens 3D</title>
+html = f'''<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{head}<title>CardioLens 3D</title>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
 <style>{css}
 :root{{color-scheme:light}} html,body{{background:#f2f4f3}}</style>
