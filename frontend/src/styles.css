@@ -406,14 +406,12 @@ table.data tr.best td { font-weight: 600; }
 .card h3 { margin: 0 0 6px; font-size: 16px; }
 
 /* ---- glossary term */
-.term { position: relative; border-bottom: 1.5px dotted currentColor; cursor: help; }
+.term { border-bottom: 1.5px dotted currentColor; cursor: pointer; text-decoration: none; }
 .term-tip {
-  position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); z-index: 60;
-  width: 280px; padding: 9px 11px; border-radius: 8px; background: var(--ink); color: #fff;
-  font-size: 12.5px; font-weight: 400; line-height: 1.45; text-align: left; letter-spacing: 0;
-  opacity: 0; pointer-events: none; transition: opacity .15s; white-space: normal; font-family: var(--font);
+  position: fixed; z-index: 1000; padding: 9px 11px; border-radius: 8px; background: var(--ink); color: #fff;
+  font-size: 12.5px; font-weight: 400; line-height: 1.45; text-align: left; letter-spacing: 0; text-transform: none;
+  pointer-events: none; white-space: normal; font-family: var(--font); box-shadow: 0 8px 24px rgba(0,0,0,0.25);
 }
-.term-tip.open { opacity: 1; }
 
 /* ---- patient step */
 .personas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -522,11 +520,22 @@ table.data tr.best td { font-weight: 600; }
 .seg-dark button { border: 0; background: transparent; color: #b8c7d2; padding: 7px 13px; border-radius: 999px; cursor: pointer; font-size: 13px; }
 .seg-dark button[aria-pressed='true'] { background: #fff; color: #0c1823; font-weight: 600; }
 .tour-card {
-  position: absolute; left: 16px; bottom: 16px; width: min(420px, calc(100% - 32px)); z-index: 5;
-  background: rgba(251,252,251,0.97); border-radius: 14px; padding: 16px 18px; box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  position: absolute; right: 16px; top: 64px; width: min(340px, calc(100% - 32px)); z-index: 5;
+  background: rgba(8, 18, 28, 0.62); color: #eef4f8; border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px; padding: 14px 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.3);
 }
-.tour-card h3 { margin: 6px 0 4px; font-size: 17px; }
-.tour-card p { margin: 0 0 12px; line-height: 1.5; color: var(--ink-2); }
+.tour-card h3 { margin: 8px 0 4px; font-size: 16px; color: #fff; }
+.tour-card p { margin: 0 0 12px; line-height: 1.5; color: #c9d6df; font-size: 13.5px; }
+.tour-card .tour-prog span { background: rgba(255,255,255,0.18); }
+.tour-card .tour-prog span i { background: #7fe3c4; }
+.tour-card .btn { background: rgba(255,255,255,0.08); color: #eef4f8; border-color: rgba(255,255,255,0.18); }
+.tour-card .btn.primary { background: #fff; color: #0c1823; border-color: #fff; }
+.tour-card .btn:disabled { opacity: 0.35; }
+.tour-card .btn.ghost { border-color: transparent; background: transparent; }
+@media (max-width: 1000px) {
+  .tour-card { top: auto; bottom: 12px; right: 12px; left: 12px; width: auto; }
+}
 .tour-prog { display: flex; gap: 4px; }
 .tour-prog span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .tour-prog span i { display: block; height: 100%; background: var(--action); border-radius: 2px; }

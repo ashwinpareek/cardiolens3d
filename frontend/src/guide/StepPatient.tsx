@@ -92,10 +92,10 @@ export function StepPatient({ onNext }: { onNext: () => void }) {
           <fieldset className="qc-card">
             <legend>About the person</legend>
             <Slider f={feats.age} v={inputs.age} on={onChange} />
-            <Seg label="Sex" value={Number(inputs.sex_male)} options={[[0, 'Female'], [1, 'Male']]} on={(v) => onChange('sex_male', v)} />
+            <Seg label={<Term k="sex_male">Sex</Term>} value={Number(inputs.sex_male)} options={[[0, 'Female'], [1, 'Male']]} on={(v) => onChange('sex_male', v)} />
             <Slider f={feats.height} v={inputs.height} on={onChange} />
             <Slider f={feats.weight} v={inputs.weight} on={onChange} />
-            <div className="qc-note">BMI {Number(inputs.bmi).toFixed(1)} (calculated)</div>
+            <div className="qc-note"><Term k="bmi">BMI</Term> {Number(inputs.bmi).toFixed(1)} (calculated from height and weight)</div>
           </fieldset>
 
           <fieldset className="qc-card">
@@ -104,7 +104,7 @@ export function StepPatient({ onNext }: { onNext: () => void }) {
             <div className="pain">
               {([['typical', 'Typical angina', 'Pressure on exertion, eases with rest'], ['atypical', 'Atypical', 'Some features of angina'],
                 ['nonanginal', 'Non-anginal', 'Unlikely to be from the heart'], ['none', 'None', 'No chest pain']] as const).map(([k, l, d]) => (
-                <button key={k} className="pain-opt" aria-pressed={pain === k} onClick={() => setPain(k)}><b>{k === 'typical' ? <Term k="typical angina">{l}</Term> : l}</b><small>{d}</small></button>
+                <button key={k} className="pain-opt" aria-pressed={pain === k} onClick={() => setPain(k)}><b>{k === 'none' ? l : <Term k={k === 'typical' ? 'typical_cp' : k}>{l}</Term>}</b><small>{d}</small></button>
               ))}
             </div>
             <Chips items={[['dyspnea', 'Short of breath'], ['edema', 'Swollen ankles']]} inputs={inputs} on={onChange} />
@@ -125,8 +125,8 @@ export function StepPatient({ onNext }: { onNext: () => void }) {
             <legend>Heart tests</legend>
             <div className="qc-label"><Term k="ECG">ECG findings</Term></div>
             <Chips items={[['q_wave', 'Q waves'], ['st_elevation', 'ST elevation'], ['st_depression', 'ST depression'], ['t_inversion', 'T-wave inversion'], ['lvh', 'Thick heart wall (LVH)']]} inputs={inputs} on={onChange} />
-            <Slider f={feats.ef} v={inputs.ef} on={onChange} label={<><Term k="EF">Ejection fraction</Term> (pumping strength)</>} />
-            <Seg label={<Term k="RWMA">Areas moving poorly</Term>} value={Number(inputs.rwma)} options={[[0, 'None'], [1, '1'], [2, '2'], [3, '3'], [4, '4']]} on={(v) => onChange('rwma', v)} />
+            <Slider f={feats.ef} v={inputs.ef} on={onChange} label="Ejection fraction (pumping strength)" />
+            <Seg label={<Term k="rwma">Heart-wall areas moving poorly</Term>} value={Number(inputs.rwma)} options={[[0, 'None'], [1, '1'], [2, '2'], [3, '3'], [4, '4']]} on={(v) => onChange('rwma', v)} />
           </fieldset>
         </div>
       </section>
@@ -163,7 +163,7 @@ function Slider({ f, v, on, label }: { f: FeatureSpec; v: number | string; on: (
   return (
     <div className="qs">
       <div className="qs-top">
-        <label htmlFor={`qs-${f.key}`}>{label ?? f.label}</label>
+        <label htmlFor={`qs-${f.key}`}><Term k={f.key}>{label ?? f.label}</Term></label>
         <span className={`qs-val ${out ? 'out' : ''}`}>{f.step && f.step < 1 ? n.toFixed(1) : Math.round(n)} <small>{f.unit}</small></span>
       </div>
       <div className="range-wrap">
@@ -190,7 +190,7 @@ function Chips({ items, inputs, on }: { items: [string, string][]; inputs: Input
     <div className="chiprow">
       {items.map(([k, l]) => (
         <button key={k} className="tchip" aria-pressed={Number(inputs[k]) === 1} onClick={() => on(k, Number(inputs[k]) ? 0 : 1)}>
-          <span className="tick" aria-hidden>{Number(inputs[k]) ? '✓' : '+'}</span>{l}
+          <span className="tick" aria-hidden>{Number(inputs[k]) ? '✓' : '+'}</span><Term k={k}>{l}</Term>
         </button>
       ))}
     </div>

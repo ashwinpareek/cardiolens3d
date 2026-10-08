@@ -30,6 +30,7 @@ export interface SceneProps {
   focus?: FocusId | null  // camera preset requested by the guided tour
   focusKey?: number       // bump to re-fly to the same preset
   compact?: boolean       // small embedded viewer (what-if page)
+  shift?: number          // 0..0.5: slide the rendered heart left (fraction of width) to make room for a side panel
 }
 
 export type FocusId = 'overview' | 'LAD' | 'LCX' | 'RCA' | 'inferior' | 'thorax'
@@ -245,7 +246,8 @@ export function HeartScene(props: SceneProps) {
   }, [gltf, regById])
 
   // ---- animated state (smoothly interpolated toward targets every frame)
-  const anim = useRef({ LAD: 0, LCX: 0, RCA: 0, terr: 1, radius: 40, ghost: 1, phase: 0, cut: 0, angio: 0, lift: 0 })
+  const anim = useRef({ LAD: 0, LCX: 0, RCA: 0, terr: 1, radius: 40, ghost: 1, phase: 0, cut: 0, angio: 0, lift: 0, shift: 0 })
+  const size = useThree((s) => s.size)
   const tmp = useMemo(() => new THREE.Color(), [])
   const camTarget = useRef<{ pos: THREE.Vector3; look: THREE.Vector3 } | null>(null)
 
@@ -266,6 +268,12 @@ export function HeartScene(props: SceneProps) {
     a.cut += (cut - a.cut) * k
     a.angio += ((angio ? 1 : 0) - a.angio) * k
     a.lift += (lift - a.lift) * k
+    a.shift += ((props.shift ?? 0) - a.shift) * k
+    {
+      const cam = camera as THREE.PerspectiveCamera
+      if (Math.abs(a.shift) > 0.002) cam.setViewOffset(size.width, size.height, a.shift * size.width, 0, size.width, size.height)
+      else if (cam.view) cam.clearViewOffset()
+    }
     const t = state.clock.elapsedTime
     // cross-section plane sweeps from in front of the heart (no cut) to just behind its centre
     setup.clip.constant = 1.2 - a.cut * 1.25

@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { AdaptiveDpr } from '@react-three/drei'
 import { HeartScene, FocusId } from '../three/HeartScene'
 import { EcgStrip } from '../components/EcgStrip'
+import { Term } from '../components/Term'
 import { useApp } from '../lib/ctx'
 import { pct, riskGradientCss } from '../lib/risk'
 import { rank } from '../lib/format'
@@ -25,12 +26,15 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
   const [cut, setCut] = useState(0)
   const [lift, setLift] = useState(0)
   const [angio, setAngio] = useState(false)
-  const [layers, setLayers] = useState({ territory: true, flow: true, labels: true, beating: true, ecg: true })
+  const [layers, setLayers] = useState({ territory: true, flow: true, labels: true, beating: true, ecg: false })
   const [tour, setTour] = useState<number | null>(null)
   const [playing, setPlaying] = useState(true)
   const [hovering, setHovering] = useState(false)
   const [progress, setProgress] = useState(0)   // 0..1 through the current stop, drives the sliding bar
   const [focus, setFocus] = useState<{ id: FocusId; key: number } | null>(null)
+  // on wide screens the tour caption sits on the right and the heart slides left to stay fully visible
+  const [wide, setWide] = useState(() => window.innerWidth > 1000)
+  useEffect(() => { const f = () => setWide(window.innerWidth > 1000); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f) }, [])
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const feats = useMemo(() => Object.fromEntries(data.features.map((f) => [f.key, f])), [data.features])
 
@@ -102,7 +106,8 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
           <HeartScene risks={risks} uncertain={uncertain} selected={selected} onSelect={(v) => { setSelected(v); app.setExplainTarget(v ?? 'CAD') }}
             bpm={bpm} view={view} territory={layers.territory} flow={layers.flow && !reduced} labels={layers.labels}
             beating={layers.beating && !reduced} registry={registry} centerlines={centerlines} base={base}
-            cut={cut} lift={lift} angio={angio} focus={focus?.id ?? null} focusKey={focus?.key} compact={compact} />
+            cut={cut} lift={lift} angio={angio} focus={focus?.id ?? null} focusKey={focus?.key} compact={compact}
+            shift={tour != null && wide ? 0.1 : 0} />
         </Suspense>
       </Canvas>
 
@@ -118,7 +123,7 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
             <div className="seg-dark" role="group" aria-label="View">
               <button aria-pressed={view === 'heart' && !angio} onClick={() => { setView('heart'); setAngio(false) }}>Heart</button>
               <button aria-pressed={view === 'torso'} onClick={() => { setView('torso'); setAngio(false); setCut(0) }}>In the body</button>
-              <button aria-pressed={angio} onClick={() => { setAngio(!angio); setView('heart') }} title="How the arteries look on an angiogram, the X-ray test that confirms narrowing">X-ray view</button>
+              <button aria-pressed={angio} onClick={() => { setAngio(!angio); setView('heart') }}><Term k="X-ray view">X-ray view</Term></button>
             </div>
           </div>
 
@@ -146,16 +151,16 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
 
           <div className="dock" role="group" aria-label="3D tools" hidden={tour != null}>
             <label className="dock-slider">
-              <span>Cut open</span>
+              <span><Term k="cut open">Cut open</Term></span>
               <input type="range" min={0} max={1} step={0.01} value={cut} onChange={(e) => { setCut(+e.target.value); if (view !== 'heart') setView('heart') }} />
             </label>
             <label className="dock-slider">
-              <span>Lift arteries</span>
+              <span><Term k="lift arteries">Lift arteries</Term></span>
               <input type="range" min={0} max={1} step={0.01} value={lift} onChange={(e) => setLift(+e.target.value)} />
             </label>
             <span className="dock-sep" />
-            {([['territory', 'Muscle tint'], ['flow', 'Blood flow'], ['labels', 'Labels'], ['beating', 'Heartbeat'], ['ecg', 'ECG']] as const).map(([k, l]) => (
-              <button key={k} className="dock-toggle" aria-pressed={layers[k]} onClick={() => setLayers((s) => ({ ...s, [k]: !s[k] }))}>{l}</button>
+            {([['territory', 'Muscle tint', 'muscle tint'], ['flow', 'Blood flow', 'blood flow'], ['labels', 'Labels', ''], ['beating', 'Heartbeat', ''], ['ecg', 'ECG', 'ECG']] as const).map(([k, l, g]) => (
+              <button key={k} className="dock-toggle" aria-pressed={layers[k]} onClick={() => setLayers((s) => ({ ...s, [k]: !s[k] }))}>{g ? <Term k={g}>{l}</Term> : l}</button>
             ))}
             <button className="dock-toggle" onClick={() => { setCut(0); setLift(0); setAngio(false); setView('heart'); setSelected(null); setFocus((f) => ({ id: 'overview', key: (f?.key ?? 0) + 1 })) }}>Reset view</button>
           </div>
@@ -164,7 +169,7 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
             <div className="bar" style={{ background: riskGradientCss }} />
             <div className="ticks"><span>Low</span><span>Chance of narrowing</span><span>High</span></div>
           </div>
-          {layers.ecg && <div className="stage-ecg"><EcgStrip inputs={inputs} bpm={bpm} playing={!reduced} /></div>}
+          {layers.ecg && tour == null && <div className="stage-ecg"><EcgStrip inputs={inputs} bpm={bpm} playing={!reduced} /></div>}
           {angio && <div className="angio-note">Simulated angiogram: arteries are drawn dark, like dye on an X-ray. Their coloured glow still shows the model’s estimate. Not a real image.</div>}
         </>
       )}

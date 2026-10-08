@@ -35,7 +35,7 @@ export function StepHeart({ onWhy }: { onWhy: (t: TargetId) => void }) {
           <h3>Chance of <Term k="CAD">coronary artery disease</Term></h3>
           <Gauge p={cad.p} lo={cad.lo} hi={cad.hi} size={240} label="Coronary artery disease" />
           <p className="verdict-line">{cadSt}</p>
-          <p className="muted small">Likely range {pct(cad.lo)}–{pct(cad.hi)}. Based on 303 patients who had <Term k="angiography">angiography</Term>.</p>
+          <p className="muted small"><Term k="likely range">Likely range</Term> {pct(cad.lo)} to {pct(cad.hi)}. Based on 303 patients who had <Term k="angiography">angiography</Term>.</p>
         </section>
 
         <section className="card">
@@ -49,7 +49,7 @@ export function StepHeart({ onWhy }: { onWhy: (t: TargetId) => void }) {
                 <button key={v} className={`artery ${selected === v ? 'is-on' : ''}`} onClick={() => { setSelected(selected === v ? null : v); setExplainTarget(v) }} aria-pressed={selected === v}>
                   <span className="artery-dot" style={{ background: riskHex(t.p) }} />
                   <span className="artery-name"><b><Term k={v}>{v}</Term></b><small>{VESSEL_INFO[v].nick}</small></span>
-                  <span className={`artery-st tone-${st.tone}`}>{st.word}</span>
+                  <span className={`artery-st tone-${st.tone}`}><Term k={st.word}>{st.word}</Term></span>
                   <span className="artery-p">{pct(t.p)}</span>
                 </button>
               )
@@ -66,10 +66,10 @@ export function StepHeart({ onWhy }: { onWhy: (t: TargetId) => void }) {
           return (
             <section className="card story">
               <h3>{VESSEL_INFO[selected].name}</h3>
-              <p><b style={{ color: riskHex(t.p) }}>{pct(t.p)}</b> chance of a significant <Term k="stenosis">narrowing</Term>. Verdict: <b className={`tone-${st.tone}`}>{st.word.toLowerCase()}</b>.</p>
-              <p className="muted small">Feeds: {VESSEL_INFO[selected].feeds}.</p>
-              {up.length > 0 && <div className="reasons"><span className="rh up">Pushing it up</span>{up.map((x) => <span key={x.key} className="rchip up">{x.f.label} <small>{valueText(x.f, inputs[x.key])}</small></span>)}</div>}
-              {down.length > 0 && <div className="reasons"><span className="rh down">Holding it down</span>{down.map((x) => <span key={x.key} className="rchip down">{x.f.label} <small>{valueText(x.f, inputs[x.key])}</small></span>)}</div>}
+              <p><b style={{ color: riskHex(t.p) }}>{pct(t.p)}</b> chance of a significant <Term k="stenosis">narrowing</Term>. Verdict: <b className={`tone-${st.tone}`}><Term k={st.word}>{st.word.toLowerCase()}</Term></b>.</p>
+              <p className="muted small">Feeds: {VESSEL_INFO[selected].feeds} (its <Term k="territory">territory</Term>).</p>
+              {up.length > 0 && <div className="reasons"><span className="rh up">Pushing it up</span>{up.map((x) => <span key={x.key} className="rchip up"><Term k={x.key}>{x.f.label}</Term> <small>{valueText(x.f, inputs[x.key])}</small></span>)}</div>}
+              {down.length > 0 && <div className="reasons"><span className="rh down">Holding it down</span>{down.map((x) => <span key={x.key} className="rchip down"><Term k={x.key}>{x.f.label}</Term> <small>{valueText(x.f, inputs[x.key])}</small></span>)}</div>}
               <button className="btn" onClick={() => onWhy(selected)}>Full explanation</button>
             </section>
           )

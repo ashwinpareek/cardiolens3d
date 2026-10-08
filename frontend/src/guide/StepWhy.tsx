@@ -63,7 +63,7 @@ export function StepWhy() {
               return (
                 <div className="sys" key={g.group}>
                   <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden><path d={m.icon} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  <div className="sys-l"><b>{m.label}</b><small>{g.top.filter((x) => Math.abs(x.c) > 0.02).slice(0, 2).map((x) => feats[x.key].label).join(', ') || m.blurb}</small></div>
+                  <div className="sys-l"><b><Term k={m.label}>{m.label}</Term></b><small>{g.top.filter((x) => Math.abs(x.c) > 0.02).slice(0, 2).map((x) => feats[x.key].label).join(', ') || m.blurb}</small></div>
                   <div className="sys-bar"><span className="axis" /><span className={`b ${g.net > 0 ? 'up' : 'down'}`} style={g.net > 0 ? { left: '50%', width: `${(g.net / max) * 50}%` } : { right: '50%', width: `${(-g.net / max) * 50}%` }} /></div>
                   <span className="sys-share">{Math.round(g.share * 100)}%</span>
                 </div>
@@ -75,7 +75,7 @@ export function StepWhy() {
 
       <div className="why-grid">
         <section className="card">
-          <h3>One answer, four estimates</h3>
+          <h3>One answer, four estimates <small className="muted">(<Term k="heatmap">how to read this</Term>)</small></h3>
           <p className="muted small">How each answer moves each estimate. Colour shows direction, size shows strength. Hover a cell for the number.</p>
           <Heatmap />
         </section>
@@ -93,7 +93,7 @@ export function StepWhy() {
             const flag = v > hi ? 'High' : v < lo ? 'Low' : 'Normal'
             return (
               <div className="mtile" key={f.key}>
-                <div className="mt-top"><span>{f.label}</span><span className={`flag ${flag === 'High' ? 'hi' : flag === 'Low' ? 'lo' : 'ok'}`}>{flag}</span></div>
+                <div className="mt-top"><span><Term k={f.key}>{f.label}</Term></span><span className={`flag ${flag === 'High' ? 'hi' : flag === 'Low' ? 'lo' : 'ok'}`}>{flag}</span></div>
                 <div className="mt-val">{valueText(f, v)}</div>
                 <div className="minirange wide">
                   <span className="nr" style={{ left: `${((Math.max(lo, min) - min) / (max - min)) * 100}%`, width: `${((Math.min(hi, max) - Math.max(lo, min)) / (max - min)) * 100}%` }} />
@@ -114,8 +114,8 @@ function ReasonCard({ f, v, c }: { f: FeatureSpec; v: number | string; c: number
   return (
     <div className={`rcard ${c > 0 ? 'up' : 'down'}`}>
       <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path d={m.icon} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      <div><b>{f.label}</b><small>{valueText(f, v)} · {m.label.toLowerCase()}</small></div>
-      <span className="rc-eff" title={`${c > 0 ? '+' : ''}${c.toFixed(2)} log-odds`}>odds {odds(c)}</span>
+      <div><b><Term k={f.key}>{f.label}</Term></b><small>{valueText(f, v)} · {m.label.toLowerCase()}</small></div>
+      <span className="rc-eff" title={`${c > 0 ? '+' : ''}${c.toFixed(2)} log-odds`}><Term k="odds">odds</Term> {odds(c)}</span>
     </div>
   )
 }
@@ -174,7 +174,7 @@ function ForceBar({ att, feats, inputs }: { att: Attribution; feats: Record<stri
         <line x1={x(att.value)} x2={x(att.value)} y1={20} y2={68} className="ft-val" />
         <text x={x(att.value)} y={H - 8} textAnchor="middle" className="ft-lab strong">this patient {pct(sig(att.value))}</text>
       </svg>
-      <div className="force-key"><span className="k up" />raises the estimate <span className="k down" />lowers it · hover a block for details</div>
+      <div className="force-key"><span className="k up" />raises the estimate <span className="k down" />lowers it · starts from the <Term k="average patient">average patient</Term>; tiny effects are grouped as <Term k="small factors">small factors</Term> · hover a block for details</div>
     </div>
   )
 }
@@ -190,7 +190,7 @@ function Heatmap() {
       <tbody>
         {rows.map((r) => (
           <tr key={r.key}>
-            <td className="heat-l">{feats[r.key].label}<small>{valueText(feats[r.key], inputs[r.key])}</small></td>
+            <td className="heat-l"><Term k={r.key}>{feats[r.key].label}</Term><small>{valueText(feats[r.key], inputs[r.key])}</small></td>
             {r.vals.map((v, i) => {
               const s = Math.sqrt(Math.abs(v) / max)
               return (

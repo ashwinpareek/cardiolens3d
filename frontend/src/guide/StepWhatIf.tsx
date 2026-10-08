@@ -5,6 +5,7 @@ import { pct, riskHex } from '../lib/risk'
 import { HeartStage } from './HeartStage'
 import { suggestChanges } from '../components/Modifiable'
 import { TARGETS, type TargetId } from '../lib/types'
+import { Term } from '../components/Term'
 
 const KNOBS = ['bp', 'ldl', 'hdl', 'tg', 'fbs', 'weight', 'pr']
 const TNAME: Record<TargetId, string> = { CAD: 'Coronary artery disease', LAD: 'LAD narrowing', LCX: 'LCX narrowing', RCA: 'RCA narrowing' }
@@ -32,7 +33,7 @@ export function StepWhatIf() {
             return (
               <div className="qs" key={k}>
                 <div className="qs-top">
-                  <label htmlFor={`wi-${k}`}>{f.label}</label>
+                  <label htmlFor={`wi-${k}`}><Term k={k}>{f.label}</Term></label>
                   <span className="qs-val">{f.step && f.step < 1 ? v.toFixed(1) : Math.round(v)} <small>{f.unit}</small>
                     {v !== b && <em className="was">was {Math.round(b)}</em>}</span>
                 </div>
@@ -75,7 +76,7 @@ export function StepWhatIf() {
               const a = before[t].p, b = pred.targets[t].p, d = b - a
               return (
                 <div className="ba-row" key={t}>
-                  <span className="ba-name">{TNAME[t]}</span>
+                  <span className="ba-name"><Term k={t}>{TNAME[t]}</Term></span>
                   <span className="ba-track">
                     <span className="ba-was" style={{ left: `${a * 100}%` }} title={`Before: ${pct(a)}`} />
                     <span className="ba-now" style={{ width: `${b * 100}%`, background: riskHex(b) }} />
