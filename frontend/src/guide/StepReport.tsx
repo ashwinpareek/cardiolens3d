@@ -12,6 +12,7 @@ const TNAME: Record<TargetId, string> = { CAD: 'Coronary artery disease', LAD: '
 export function sourceLabel(source: string, presets: { id: string; label: string }[]) {
   if (source.startsWith('dataset:')) return `Dataset patient #${Number(source.slice(8)) + 1}`
   if (source.startsWith('preset:')) return `Example: ${presets.find((p) => `preset:${p.id}` === source)?.label ?? 'patient'}`
+  if (source === 'note') return 'Imported from a clinical note'
   return 'Custom patient'
 }
 

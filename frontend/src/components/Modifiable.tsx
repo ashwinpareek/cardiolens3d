@@ -39,36 +39,55 @@ export function suggestChanges(bundle: Bundle, features: FeatureSpec[], inputs: 
   return out
 }
 
+/** Improving a value should never be shown as raising risk on screen without explanation. In this
+ *  dataset some do (no medication data: treated patients have "better" numbers), so such changes are
+ *  split out and labelled as a dataset artifact instead of being offered as advice. */
+export const WRONG_WAY = 0.0005
+export function splitChanges(items: Change[], target: TargetId) {
+  return { helps: items.filter((c) => c.delta[target] <= WRONG_WAY), odd: items.filter((c) => c.delta[target] > WRONG_WAY) }
+}
+
 export function Modifiable({ bundle, features, inputs, target, onApply }: { bundle: Bundle; features: FeatureSpec[]; inputs: Inputs; target: TargetId; onApply: (patch: Inputs) => void }) {
   const items = useMemo(() => suggestChanges(bundle, features, inputs).sort((a, b) => a.delta[target] - b.delta[target]), [bundle, features, inputs, target])
-  const all = items.reduce((s, c) => ({ ...s, ...c.patch }), {} as Inputs)
+  const { helps, odd } = splitChanges(items, target)
+  const all = helps.reduce((s, c) => ({ ...s, ...c.patch }), {} as Inputs)
   return (
     <div className="section">
       <div className="why-head">
         <h3 style={{ margin: 0 }}>Modifiable factors</h3>
-        {items.length > 1 && <button className="btn" style={{ marginLeft: 'auto' }} onClick={() => onApply(all)}>Apply all</button>}
+        {helps.length > 1 && <button className="btn" style={{ marginLeft: 'auto' }} onClick={() => onApply(all)}>Apply all</button>}
       </div>
       {items.length === 0 ? (
         <p className="hint">Every modifiable measurement is already inside its reference range.</p>
       ) : (
         <>
           <p className="hint">How the {target} estimate moves if one out-of-range factor is brought to the edge of its reference range. This is the model's sensitivity, learned from 303 patients; it is not a treatment effect.</p>
-          {items.some((c) => c.delta[target] > 0.005) && (
-            <p className="hint">Where improving a value raises the estimate (often LDL), the model is probably echoing treatment in the source population, for example statins in patients already known to have disease. The dataset does not record medications. Read it as a caution, not a recommendation.</p>
-          )}
-          <div className="mods">
-            {items.map((c) => {
-              const d = c.delta[target]
-              return (
-                <button key={c.key} className="mod" onClick={() => onApply(c.patch)} title="Apply this change to the patient">
-                  <span className="mod-l"><b>{c.label}</b><small>{c.from} → {c.to}</small></span>
-                  <span className={`mod-d ${d < -0.005 ? 'down' : d > 0.005 ? 'up' : ''}`}>{d > 0 ? '+' : d < 0 ? '−' : '±'}{Math.abs(d * 100).toFixed(1)} pts</span>
-                </button>
-              )
-            })}
-          </div>
+          {helps.length > 0 ? (
+            <div className="mods">
+              {helps.map((c) => {
+                const d = c.delta[target]
+                return (
+                  <button key={c.key} className="mod" onClick={() => onApply(c.patch)} title="Apply this change to the patient">
+                    <span className="mod-l"><b>{c.label}</b><small>{c.from} → {c.to}</small></span>
+                    <span className={`mod-d ${d < -0.005 ? 'down' : ''}`}>{d < -0.0005 ? '−' : '±'}{Math.abs(d * 100).toFixed(1)} pts</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : <p className="hint">None of this patient's out-of-range factors lowers the {target} estimate in this model.</p>}
+          {odd.length > 0 && <OddFactors odd={odd} target={target} />}
         </>
       )}
     </div>
+  )
+}
+
+/** Changes that move the estimate the "wrong" way: shown collapsed, explained, never as a button. */
+export function OddFactors({ odd, target }: { odd: Change[]; target: TargetId }) {
+  return (
+    <details className="odd">
+      <summary>{odd.length} healthy change{odd.length > 1 ? 's' : ''} the model does not reward ({odd.map((c) => c.label).join(', ')})</summary>
+      <p>In this dataset, {odd.map((c) => `“${c.label}” (${c.from} → ${c.to}) moves the ${target} estimate up by ${(c.delta[target] * 100).toFixed(1)} pts`).join('; ')}. This is a dataset artifact, not advice: the data do not record medicines, so patients already treated for known heart disease (statins, diet, weight loss) tend to have "better" numbers. The model learns that association. In real life these changes lower cardiovascular risk.</p>
+    </details>
   )
 }

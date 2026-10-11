@@ -187,6 +187,9 @@ def main():
     scene.add_geometry(heart_wall_scene, node_name="heart_wall", geom_name="heart_wall",
                        metadata={k: hp[k] for k in ("id", "label", "group", "fma", "description")})
     terr_frac = {t: float((W.argmax(1) == i).mean()) for i, t in enumerate(terr_ids)}
+    # low-poly myocardium for the viewer's adaptive-quality mode (machines without a dedicated GPU)
+    from add_lod import add_heart_lod
+    stats["heart_wall_lo"] = len(add_heart_lod(scene).faces)
 
     glb = scene.export(file_type="glb")
     (OUT_DIR / "heart_scene.glb").write_bytes(glb)

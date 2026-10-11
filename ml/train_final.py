@@ -31,6 +31,7 @@ from cardio_model import CardioModel, TargetSpec, conformal_set
 from features import (FEATURES, LEAKAGE_COLUMNS, TARGET_IDS, encode_inputs, encode_targets, load_raw,
                       schema_json)
 from models import SEED, candidates
+from attach_results import extra_results
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "z_alizadeh_sani_extension.xlsx"
@@ -331,6 +332,7 @@ def main():
         "sanity": {"rows": sanity_rows, "violations": violations,
                    "direct_violations": json.loads((RES / "structure_ablation.json").read_text())["direct"]["violations"]
                    if (RES / "structure_ablation.json").exists() else None},
+        **extra_results(),  # external validation + single-split optimism (ml/external_validation.py, ml/split_optimism.py)
     }
     card = jsonable(card)
     (ART / "model_card.json").write_text(json.dumps(card, indent=1))

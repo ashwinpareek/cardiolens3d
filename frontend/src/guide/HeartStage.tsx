@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { AdaptiveDpr } from '@react-three/drei'
+import { useAdaptiveQuality, FpsProbe, QualityBadge, SHOW_FPS } from '../three/Adaptive'
 import { HeartScene, FocusId } from '../three/HeartScene'
 import { EcgStrip } from '../components/EcgStrip'
 import { Term } from '../components/Term'
@@ -36,6 +36,8 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
   const [wide, setWide] = useState(() => window.innerWidth > 1000)
   useEffect(() => { const f = () => setWide(window.innerWidth > 1000); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f) }, [])
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const q = useAdaptiveQuality()
+  const [fps, setFps] = useState<number | null>(null)
   const feats = useMemo(() => Object.fromEntries(data.features.map((f) => [f.key, f])), [data.features])
 
   // ---- guided tour, written from the current prediction
@@ -100,14 +102,15 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`stage ${angio ? 'is-angio' : ''} ${compact ? 'is-compact' : ''}`}>
       <Canvas camera={{ position: compact ? [1.6, 0.5, 3.2] : [1.25, 0.45, 2.75], fov: 35, near: 0.05, far: 60 }}
-        dpr={[1, 1.75]} gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}>
-        <AdaptiveDpr pixelated={false} />
+        dpr={q.dpr} gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}>
+        {q.monitor}
+        <FpsProbe onFps={SHOW_FPS ? setFps : undefined} />
         <Suspense fallback={null}>
           <HeartScene risks={risks} uncertain={uncertain} selected={selected} onSelect={(v) => { setSelected(v); app.setExplainTarget(v ?? 'CAD') }}
-            bpm={bpm} view={view} territory={layers.territory} flow={layers.flow && !reduced} labels={layers.labels}
-            beating={layers.beating && !reduced} registry={registry} centerlines={centerlines} base={base}
+            bpm={bpm} view={view} territory={layers.territory} flow={layers.flow && !reduced && q.tier >= 2} labels={layers.labels}
+            beating={layers.beating && !reduced && q.tier >= 1} registry={registry} centerlines={centerlines} base={base}
             cut={cut} lift={lift} angio={angio} focus={focus?.id ?? null} focusKey={focus?.key} compact={compact}
-            shift={tour != null && wide ? 0.1 : 0} />
+            shift={tour != null && wide ? 0.1 : 0} lowPoly={q.tier === 0} />
         </Suspense>
       </Canvas>
 
@@ -165,6 +168,7 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
             <button className="dock-toggle" onClick={() => { setCut(0); setLift(0); setAngio(false); setView('heart'); setSelected(null); setFocus((f) => ({ id: 'overview', key: (f?.key ?? 0) + 1 })) }}>Reset view</button>
           </div>
 
+          <QualityBadge tier={q.tier} fps={fps} />
           <div className="stage-legend" aria-hidden>
             <div className="bar" style={{ background: riskGradientCss }} />
             <div className="ticks"><span>Low</span><span>Chance of narrowing</span><span>High</span></div>

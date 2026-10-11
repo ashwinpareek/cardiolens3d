@@ -114,6 +114,32 @@
   <tr><td><b>RCA</b></td><td>P(CAD) × logistic L1</td><td class="r"><b>0.738</b> ± 0.050</td><td class="r">0.673–0.792</td><td class="r">0.604</td><td class="r">0.642</td><td class="r">0.517</td><td class="r">0.830</td><td class="r">0.532</td><td class="r">0.633</td><td class="r">0.198</td><td class="r">89.2%</td></tr>
 </table>
 <p class="small">*Bootstrap CI of pooled out-of-fold AUC (1,000 resamples). Threshold metrics use the in-fold Youden threshold. At a fixed 0.5 threshold, accuracy is CAD 0.865, LAD 0.789, LCX 0.636, RCA 0.658. Coverage is the empirical coverage of the 90% conformal sets (target 90%). Singleton (confident) sets: CAD 90%, LAD 66%, LCX 48%, RCA 50%.</p>
+<div class="two">
+<div>
+<h3>External validation: four other hospitals (920 patients)</h3>
+<table>
+  <tr><th>Test cohort</th><th class="r">n</th><th class="r">CAD</th><th class="r">ROC-AUC (95% CI)</th></tr>
+  <tr><td>Cleveland (USA)</td><td class="r">304</td><td class="r">46%</td><td class="r">0.764 (0.71–0.82)</td></tr>
+  <tr><td>Budapest (Hungary)</td><td class="r">293</td><td class="r">36%</td><td class="r">0.767 (0.71–0.82)</td></tr>
+  <tr><td>Zurich/Basel (Switzerland)</td><td class="r">123</td><td class="r">93%</td><td class="r">0.702 (0.47–0.91)</td></tr>
+  <tr><td>VA Long Beach (USA)</td><td class="r">200</td><td class="r">75%</td><td class="r">0.636 (0.55–0.72)</td></tr>
+  <tr class="hl"><td>All four, pooled</td><td class="r">920</td><td class="r">55%</td><td class="r"><b>0.756</b> (0.725–0.787)</td></tr>
+</table>
+<p class="small">A reduced CAD model on the 10 inputs both datasets share (age, sex, chest-pain type, resting BP, fasting sugar &gt;120, ECG ST-T change, LVH, total cholesterol ≈ LDL+HDL+TG/5) was trained on all 303 Z-Alizadeh Sani patients and applied unchanged to the UCI Heart Disease cohorts (same label: ≥50% stenosis on angiography). Cleveland's <code>ca</code> column is excluded: it is effectively part of the answer. Internal nested-CV AUC of this reduced model: 0.903 ± 0.043. Pooled calibration is near ideal (intercept 0.03, slope 1.00); per cohort the base rate differs, so the threshold would need local recalibration. Trained <i>inside</i> UCI the same inputs reach 0.839, an upper bound for transfer. Vessels cannot be tested externally (UCI has no per-artery labels).</p>
+</div>
+<div>
+<h3>Why our accuracy is 84.5%, not 95%</h3>
+<table>
+  <tr><th>Same pipeline, same data</th><th class="r">CAD accuracy</th></tr>
+  <tr class="hl"><td>Nested, repeated CV (25 outer folds)</td><td class="r"><b>84.5%</b></td></tr>
+  <tr><td>One random 80/20 split, median of 100</td><td class="r">85.2%</td></tr>
+  <tr><td>One split, 5th–95th percentile</td><td class="r">78.7–91.8%</td></tr>
+  <tr><td>One split, luckiest of 100</td><td class="r">95.1%</td></tr>
+  <tr><td>Threshold tuned on the test set (leaky)</td><td class="r">96.7%</td></tr>
+</table>
+<p class="small">With 61 test patients, one split's accuracy swings by ±7 points depending on who lands in it; 15% of splits show ≥90%. Reporting a lucky split, or tuning the threshold on the test patients, can produce the 95%+ figures common for this dataset. Every number here comes from folds whose patients were never seen in any modelling choice (<code>ml/split_optimism.py</code>).</p>
+</div>
+</div>
 <figure><img src="img/eval_curves.png" alt="ROC, calibration and decision curves"><figcaption>Figure 2. Out-of-fold ROC curves, calibration, and a decision curve for CAD. The model gives positive net benefit over "treat all" across thresholds from about 0.2 to 0.9.</figcaption></figure>
 
 <div class="two">
@@ -133,7 +159,7 @@
   <tr><td>Full pipeline, direct vessels</td><td class="r">0.928</td><td class="r">0.840</td><td class="r">0.703</td><td class="r">0.746</td></tr>
   <tr class="hl"><td>Full pipeline, hierarchical (deployed)</td><td class="r">0.928</td><td class="r">0.849</td><td class="r">0.706</td><td class="r">0.738</td></tr>
 </table>
-<p class="small">The first nine rows are single uncalibrated models with direct targets (5×5 nested CV, same seed). Every algorithm is within ±0.01 AUC on CAD/LAD/RCA. Boosting gains about 0.02 on LCX, which did not justify losing exact, browser-portable explanations.</p>
+<p class="small">The first nine rows are single uncalibrated models with direct targets (5×5 nested CV, same seed). Every algorithm is within ±0.01 AUC on CAD/LAD/RCA. LightGBM's LCX 0.730 vs 0.706 is well inside the fold-to-fold SD (±0.054), so it is noise, not a reason to give up exact, browser-portable explanations.</p>
 </div>
 <div>
 <h3>Hierarchical vs direct (paired, identical folds)</h3>
@@ -157,7 +183,7 @@
 </div>
 
 <!-- ============================================================ PAGE 4 -->
-<h2 class="pb">5. 3D anatomical pipeline</h2>
+<h2>5. 3D anatomical pipeline</h2>
 <div class="two-60">
 <div>
 <p><b>Source.</b> BodyParts3D 4.0 (© 2008 DBCLS, CC BY-SA 2.1 JP), the resource recommended in the brief, read from a GitHub mirror of its STL files. 85 parts are selected by FMA id in <code>anatomy/anatomy_registry.json</code>:</p>
@@ -195,7 +221,7 @@
 <li>Clicking a vessel selects it everywhere (3D, list, bullseye, explanation); hover names the structure. Heart ⇄ Thorax dissolves the thorax with a radial-fade shader.</li>
 <li>Guided tour (camera path with captions written from the prediction), a cross-section clipping plane with shaded chamber walls, an exploded "lift arteries" view, an angiogram-style X-ray look, focus mode for the selected artery, and a synthetic ECG whose morphology follows the ECG inputs.</li>
 </ul>
-<p><b>Performance without a GPU:</b> about 219 k triangles, no shadow maps or HDR environment, adaptive DPR, a low-power WebGL context and one draw call per part. It stays interactive on integrated graphics and renders correctly even on a software rasteriser (SwiftShader, used for all screenshots here).</p>
+<p><b>Performance without a GPU.</b> No shadow maps or HDR environment, a low-power WebGL context, one draw call per part. <b>Adaptive quality</b> (drei <code>PerformanceMonitor</code>) watches the real frame rate and steps down when it drops: lower render resolution, flow particles off, then a 12 k-triangle myocardium (instead of 60 k) and a paused heartbeat; it steps back up when frames recover. Worst case measured, with <i>no GPU at all</i> (SwiftShader software rendering on 2 CPU cores, 1440×900): 2.0 fps at full quality → 4.1 fps in low mode, still usable. <code>?fps=1</code> shows a live counter for measuring any machine.</p>
 <p><b>Honest mapping.</b> The dataset gives vessel-level labels, not lesion positions. CardioLens therefore colours whole vessels and states this on the canvas. RWMA is treated as an input, not a lesion map. The bullseye uses the standard AHA segment → artery assignment and is labelled as the expected ischaemic territory.</p>
 
 <!-- ============================================================ PAGE 5 -->
@@ -219,7 +245,8 @@
 <li><b>AHA 17-segment bullseye</b> coloured by vessel risk and linked to the 3D selection.</li>
 <li><b>Why this estimate:</b> a generated plain-language sentence, a SHAP force plot, odds-multiplier reason cards, a body-system breakdown and a feature × target contribution heatmap (the dual-encoded format clinicians preferred in a 206-clinician study), for CAD or any vessel.</li>
 <li><b>Measurements:</b> every physiological value next to its reference range (with high/low flag), its signed contribution and its share of the total attribution (brief §3c).</li>
-<li><b>Modifiable factors:</b> re-scores with one out-of-range factor moved to its range limit, with one-click "apply". Labelled as model sensitivity, not treatment effect. Counter-intuitive directions (e.g. LDL, plausibly reflecting statin treatment in known disease) are flagged.</li>
+<li><b>Modifiable factors:</b> re-scores with one out-of-range factor moved to its range limit, with one-click "apply". Labelled as model sensitivity, not treatment effect. Changes that move the wrong way in this data (e.g. lowering LDL or BMI, plausibly reflecting treatment of known disease) are never offered as advice; they are collapsed under a labelled "dataset artifact" note.</li>
+<li><b>Clinical-note import</b> (a second input modality): paste or open a referral letter or lab report; transparent rules extract up to 54 inputs in the browser (negations such as "no Q waves", SI units such as mmol/L converted) and show the source words for each value before loading.</li>
 <li><b>Similar patients:</b> the 12 nearest dataset patients (importance-weighted distance) with their actual angiography results and out-of-fold scores.</li>
 <li><b>Model evidence</b> (all of §4, inside the app) and <b>Download report</b>: a 2-page A4 PDF built in the browser (3D snapshot, estimates, reasons, measurements, validation, disclaimer), plus CSV and JSON exports.</li>
 </ul>
@@ -227,16 +254,16 @@
 </div>
 
 <h2>7. Usage</h2>
-<pre>docker compose up --build                                   # server + app → http://localhost:8000
-pip install -r requirements.txt && (cd frontend && npm ci)  # or locally:
-uvicorn backend.app.main:app --port 8000  &  (cd frontend && npm run dev)   # → http://localhost:5173
-cd ml && python compare_models.py && python structure_ablation.py && python verify_shap.py && python train_final.py && cd ..
-python -m pytest -q tests      # 17 tests: parity, invariants, API contract</pre>
+<pre>make install      # pinned Python + Node dependencies
+make reproduce    # retrain (nested CV), external validation, split study, then check all 20 reported metrics (±0.005) + tests
+make test         # 23 tests: no-leakage (LAD/LCX/RCA/Cath never inputs), engine parity to 1e-9, API contract
+make serve        # FastAPI + app → http://localhost:8000      (or: docker compose up --build)
+make single       # CardioLens3D.html: the whole app, model and 3D heart in one offline file (hosts anywhere)</pre>
 <p><b>Workflow:</b> pick a dataset patient (its angiography result is shown), a preset, or edit any value → rotate the heart and click a vessel → read the verdict and explanation → try modifiable factors → check similar patients → export the report.</p>
 
 <h2 style="margin-top:8px">8. Limitations and responsible use</h2>
 <ul>
-<li>The data are 303 patients from one centre with no external validation. Probabilities are calibrated to this population's 71% CAD prevalence, which is far above a general screening population.</li>
+<li>Training data are 303 patients from one centre. External validation of overall CAD on 920 patients from four other hospitals shows useful but lower discrimination (AUC 0.76) and a threshold that needs local recalibration; per-vessel predictions are validated internally only. Probabilities reflect a 71% CAD prevalence, far above a screening population.</li>
 <li>LCX and RCA are only moderately predictable from these features (AUC 0.71–0.74). Conformal sets make this visible: about half of vessel predictions are flagged "uncertain".</li>
 <li>Territories come from a single reference heart (coronary dominance varies) and flow particles are illustrative. Associations are not causal; the modifiable-factors panel is framed as model sensitivity.</li>
 </ul>

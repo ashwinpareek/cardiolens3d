@@ -8,7 +8,7 @@ pytest==9.1.1
 httpx==0.28.1
 # Anatomy pipeline (anatomy/build_anatomy.py)
 trimesh==5.1.1
-fast-simplification
+fast-simplification==0.2.0
 scikit-image==0.26.0
 networkx==3.6.1
 scipy==1.18.1

@@ -59,7 +59,9 @@ Underlined terms (LAD, EF, RWMA, stenosis, conformal set and others) show plain-
 | **Validation of the whole pipeline** | Repeated (5×5) outer CV, with algorithm choice, hyper-parameters, Platt calibration, Youden thresholds and conformal quantiles all fit **inside** each training fold. 9 algorithms were compared with nested CV. Sanity checks include a label-permutation test (AUC 0.49) and a leakage demonstration (AUC 0.997 if the vessel columns were used as inputs). |
 | **Exact explanations** | The models are additive (logistic), so per-feature contributions are **exact interventional SHAP** (they match `shap.LinearExplainer` to 4e-16). Hierarchical vessels use closed-form integrated gradients that sum exactly to the patient's log-odds. These are not sampled approximations. |
 | **Honest uncertainty** | A bootstrap 90% interval on every probability, plus **Mondrian conformal prediction sets** at 90%. Empirical coverage is 88–90%, so the UI says "uncertain" when the model can't decide. |
-| **Runs anywhere** | FastAPI model server, plus an identical in-browser engine (tested to 1e-9 on all 303 patients). No GPU is needed, and it keeps working offline. |
+| **Externally validated** | A reduced CAD model on the inputs both datasets share was tested, unchanged, on **920 patients from four other hospitals** (UCI Cleveland, Hungary, Switzerland, VA): AUC **0.756** (0.725–0.787) with near-ideal pooled calibration. See [Results](#external-validation). |
+| **Clinical-note import** | A second input modality: paste or open a referral letter or lab report, and transparent in-browser rules extract the inputs (with negations such as "no Q waves" and mmol/L → mg/dL conversion), showing the source words for every value before loading. |
+| **Runs anywhere** | FastAPI model server, plus an identical in-browser engine (tested to 1e-9 on all 303 patients). No GPU is needed: **adaptive quality** lowers resolution, then switches to a 12k-triangle heart and pauses the heartbeat when the frame rate drops. The whole app also ships as one offline HTML file. |
 | **Extensible by config** | `ml/features.py` (inputs), `config/registry.json` (targets → meshes → AHA segments), `anatomy/anatomy_registry.json` (meshes). Adding a lab value, a target or a structure doesn't need a redesign. |
 
 ## Results
@@ -82,7 +84,35 @@ Pooled out-of-fold ROC-AUC 95% bootstrap CIs:
 
 The full model card (ROC, calibration, decision curves, subgroups, algorithm comparison) is in [`ml/artifacts/model_card.json`](ml/artifacts/model_card.json) and in the app's **Model evidence** tab.
 
-On 303 patients, gradient boosting, random forests, SVMs and EBMs landed within about ±0.01 AUC of regularised logistic regression on CAD, LAD and RCA. Tree ensembles gained about 0.02 AUC on LCX. We kept the glass-box model so explanations stay exact and identical in the browser.
+On 303 patients, gradient boosting, random forests, SVMs and EBMs landed within about ±0.01 AUC of regularised logistic regression on CAD, LAD and RCA. LightGBM's LCX AUC of 0.730 versus our 0.706 is well inside the fold-to-fold SD (±0.054): noise, not a reason to give up exact explanations that run identically in the browser.
+
+### External validation
+
+Overall CAD only (the UCI cohorts have no per-artery labels). Reduced model on 10 shared inputs: age, sex, chest-pain type, resting BP, fasting sugar > 120 mg/dL, resting ECG ST-T change, LVH, total cholesterol (Z-Alizadeh Sani: LDL + HDL + TG/5). Cleveland's `ca` is excluded because it is effectively part of the answer. Trained on all 303 Z-Alizadeh Sani patients, never refit. Script: [`ml/external_validation.py`](ml/external_validation.py); data provenance: [`data/external/README.md`](data/external/README.md).
+
+| Test cohort | n | CAD prevalence | ROC-AUC (95% CI) |
+|---|---|---|---|
+| Cleveland | 304 | 46% | 0.764 (0.71–0.82) |
+| Hungary | 293 | 36% | 0.767 (0.71–0.82) |
+| Switzerland | 123 | 93% | 0.702 (0.47–0.91) |
+| VA Long Beach | 200 | 75% | 0.636 (0.55–0.72) |
+| **All four** | **920** | 55% | **0.756 (0.725–0.787)** |
+
+Internal nested-CV AUC of the same reduced model: 0.903 ± 0.043. The same inputs trained *inside* UCI reach 0.839, an upper bound for transfer. Pooled calibration intercept 0.03, slope 1.00; per hospital, the base rate differs, so the decision threshold would need local recalibration.
+
+### Why our accuracy is 84.5%, not 95%
+
+[`ml/split_optimism.py`](ml/split_optimism.py) runs the exact same pipeline on 100 single random 80/20 splits:
+
+| Same pipeline, same data | CAD accuracy |
+|---|---|
+| **Nested, repeated CV (reported)** | **84.5%** |
+| One random split, median | 85.2% |
+| One random split, 5th–95th percentile | 78.7–91.8% |
+| One random split, luckiest of 100 | 95.1% |
+| Threshold tuned on the test set (leaky) | 96.7% |
+
+With 61 test patients, a single split swings by about ±7 points. A lucky split, or a threshold tuned on the test patients, explains most 95%+ figures reported for this dataset.
 
 ## Quick start
 
@@ -119,10 +149,19 @@ For hosts that only serve standard web types, build with `VITE_STATIC_DEMO=1 npm
 
 ## Reproduce everything
 
-All randomness is seeded (`SEED = 42`). The trained artifacts are committed, so these steps are only needed to regenerate them.
+All randomness is seeded (`SEED = 42`) and dependencies are pinned. The trained weights are committed; one command regenerates them and checks every reported number:
 
 ```bash
-pip install -r requirements-dev.txt
+make install     # pinned Python + Node dependencies
+make reproduce   # retrain → external validation → split study → compare 20 metrics with ml/results/expected_metrics.json → tests
+make single      # CardioLens3D.html: the whole app in one offline file
+```
+
+`make reproduce` takes about 5 minutes on 2 CPU cores and regenerates a byte-identical model bundle. `make test` includes tests that fail if `LAD`, `LCX`, `RCA` or `Cath` ever reach the model's inputs, its exported weights or the app's input schema.
+
+The supporting experiments, individually:
+
+```bash
 cd ml
 python compare_models.py --repeats 5        # 9 algorithms × 4 targets, nested CV   -> results/compare_*.json   (~1 h on 2 cores)
 python structure_ablation.py 5              # direct vs hierarchical, paired        -> results/structure_ablation.json
@@ -137,7 +176,7 @@ Anatomy (only needed to rebuild the 3D scene):
 ```bash
 git clone --depth 1 https://github.com/Kevin-Mattheus-Moerman/BodyParts3D   # mirror of BodyParts3D 4.0 STL files
 python anatomy/build_anatomy.py --stl BodyParts3D/assets/BodyParts3D_data/stl
-npx @gltf-transform/cli meshopt frontend/public/anatomy/heart_scene.glb frontend/public/anatomy/heart_scene.glb
+npx @gltf-transform/cli meshopt frontend/public/anatomy/heart_scene.glb frontend/public/anatomy/heart_scene.glb   # includes the low-poly LOD (anatomy/add_lod.py)
 ```
 
 ## How it works
@@ -184,27 +223,28 @@ Interactive docs are at `http://localhost:8000/docs`.
 
 ```
 ml/            features.py · models.py · cardio_model.py · engine.py · compare_models.py · structure_ablation.py
-               verify_shap.py · train_final.py · artifacts/ (weights, bundle, model card) · results/ (experiments)
+               verify_shap.py · train_final.py · external_validation.py · split_optimism.py · check_reproduction.py · artifacts/ (weights, bundle, model card) · results/ (experiments)
 backend/app/   FastAPI server
 frontend/      React + TypeScript + React Three Fiber app (src/three = 3D scene, src/components = dashboard)
 anatomy/       BodyParts3D → GLB pipeline and anatomy registry
 config/        target ↔ mesh ↔ AHA-segment registry
-tests/         parity, invariants, API contract (17 tests)
+tests/         no-leakage, parity, invariants, API contract (23 tests)
 docs/          project documentation (PDF), demo video script, screenshots
-data/          the dataset (CC BY 4.0)
+data/          the dataset (CC BY 4.0); external/ the UCI Heart Disease test cohorts (CC BY 4.0)
 ```
 
 ## Limitations
 
-- 303 patients from a single Iranian centre. The model is not externally validated.
+- Trained on 303 patients from a single Iranian centre. Overall CAD transfers to four external hospitals with lower discrimination (AUC 0.76) and needs local threshold recalibration; per-vessel predictions are validated internally only.
 - Labels are vessel-level. The dataset does not record **where** along a vessel a lesion sits, so the whole vessel is coloured and the UI says so.
 - Territory tinting uses nearest-vessel assignment on a reference heart. Real perfusion territories vary between patients (for example, right- vs left-dominant circulation).
 - Vessel-level discrimination is lower in patients ≥ 60 and in diabetics (see subgroups in the model card).
-- Some associations reflect treatment rather than biology. For example, lower LDL is linked to higher risk, plausibly because patients with known disease are already on statins. The "Modifiable factors" panel flags this and labels its output as model sensitivity, not treatment effect.
+- Some associations reflect treatment rather than biology. For example, lower LDL is linked to higher risk, plausibly because patients with known disease are already on statins. The "Modifiable factors" panel never offers such a change as advice: it is collapsed under a labelled "dataset artifact" note.
 
 ## Credits and licences
 
 - **Dataset:** Alizadehsani R., Roshanzamir M., Sani Z. (2013). *Extention of Z-Alizadeh Sani dataset.* UCI Machine Learning Repository. [doi:10.24432/C5461K](https://doi.org/10.24432/C5461K). CC BY 4.0.
+- **External validation data:** Janosi A., Steinbrunn W., Pfisterer M., Detrano R. (1989). *Heart Disease.* UCI Machine Learning Repository. [doi:10.24432/C52P4X](https://doi.org/10.24432/C52P4X). CC BY 4.0.
 - **Anatomy:** BodyParts3D, © 2008 Life Science Integrated Database Center, licensed under CC BY-SA 2.1 Japan. The derived GLB (`frontend/public/anatomy/`) is shared under the same licence.
 - **AHA 17-segment model:** Cerqueira M.D. et al., *Circulation* 2002;105:539–542.
 - **Code:** MIT licence (see `LICENSE`).

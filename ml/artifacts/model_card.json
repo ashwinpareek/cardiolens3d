@@ -1,5 +1,5 @@
 {
- "created": "2026-10-07T15:39:55+00:00",
+ "created": "2026-10-11T14:57:09+00:00",
  "dataset": {
   "name": "Extension of Z-Alizadeh Sani dataset (UCI)",
   "n": 303,
@@ -3887,5 +3887,169 @@
   ],
   "violations": 0,
   "direct_violations": 704
+ },
+ "external": {
+  "features": [
+   "Age",
+   "Male sex",
+   "Typical angina",
+   "Atypical chest pain",
+   "Non-anginal chest pain",
+   "Resting systolic BP",
+   "Fasting sugar >120 mg/dL",
+   "ECG ST-T abnormality",
+   "ECG LVH",
+   "Total cholesterol"
+  ],
+  "missing_in_external": {
+   "Resting systolic BP": 60,
+   "Fasting sugar >120 mg/dL": 90,
+   "ECG ST-T abnormality": 2,
+   "ECG LVH": 2,
+   "Total cholesterol": 202
+  },
+  "train": {
+   "dataset": "Z-Alizadeh Sani",
+   "n": 303,
+   "prevalence": 0.7128712871287128
+  },
+  "internal_nested_cv_auc": [
+   0.9032097997761471,
+   0.04314531349659256
+  ],
+  "threshold": 0.6994525940859285,
+  "external": {
+   "pooled": {
+    "n": 920,
+    "positives": 509,
+    "prevalence": 0.5532608695652174,
+    "mean_predicted": 0.546799078855645,
+    "accuracy": 0.6076086956521739,
+    "sensitivity": 0.39096267190569745,
+    "specificity": 0.8759124087591241,
+    "brier": 0.19930131800102732,
+    "auc": 0.7563994091749962,
+    "auc_ci95": [
+     0.7250634039283469,
+     0.7872559048993919
+    ],
+    "calibration_intercept": 0.03175893764358785,
+    "calibration_slope": 1.000439138488635
+   },
+   "Cleveland": {
+    "n": 304,
+    "positives": 139,
+    "prevalence": 0.45723684210526316,
+    "mean_predicted": 0.5283882323680145,
+    "accuracy": 0.6414473684210527,
+    "sensitivity": 0.3669064748201439,
+    "specificity": 0.8727272727272727,
+    "brier": 0.20518039616710057,
+    "auc": 0.7642467843906693,
+    "auc_ci95": [
+     0.7085285702435351,
+     0.8170964660762766
+    ],
+    "calibration_intercept": -0.33750866823687925,
+    "calibration_slope": 0.9537220494806852
+   },
+   "Hungary": {
+    "n": 293,
+    "positives": 106,
+    "prevalence": 0.36177474402730375,
+    "mean_predicted": 0.4613353246159777,
+    "accuracy": 0.6791808873720137,
+    "sensitivity": 0.22641509433962265,
+    "specificity": 0.9358288770053476,
+    "brier": 0.19637519403985418,
+    "auc": 0.767379679144385,
+    "auc_ci95": [
+     0.7112222706450974,
+     0.8226841885059107
+    ],
+    "calibration_intercept": -0.48221812137465064,
+    "calibration_slope": 1.1878562188427864
+   },
+   "Switzerland": {
+    "n": 123,
+    "positives": 115,
+    "prevalence": 0.9349593495934959,
+    "mean_predicted": 0.5864329979248745,
+    "accuracy": 0.36585365853658536,
+    "sensitivity": 0.33043478260869563,
+    "specificity": 0.875,
+    "brier": 0.19564346939253005,
+    "auc": 0.7021739130434782,
+    "auc_ci95": [
+     0.4657763532763533,
+     0.9137949145175311
+    ],
+    "calibration_intercept": 2.606065914917545,
+    "calibration_slope": 1.0355168019387446
+   },
+   "VA Long Beach": {
+    "n": 200,
+    "positives": 149,
+    "prevalence": 0.745,
+    "mean_predicted": 0.6756131052503802,
+    "accuracy": 0.6,
+    "sensitivity": 0.5771812080536913,
+    "specificity": 0.6666666666666666,
+    "brier": 0.1969014676859403,
+    "auc": 0.6362679299907883,
+    "auc_ci95": [
+     0.5485150767543859,
+     0.7208162130504266
+    ],
+    "calibration_intercept": 0.7002313509904773,
+    "calibration_slope": 0.4861216420447886
+   }
+  },
+  "external_without_cholesterol_auc": 0.7586389036276464,
+  "native_uci_cv_auc": 0.8394686399074565,
+  "coefficients_per_sd": {
+   "Age": 0.43524202271186563,
+   "Male sex": 0.11991122916705994,
+   "Typical angina": 0.5572910870840923,
+   "Atypical chest pain": -0.3276478137372843,
+   "Non-anginal chest pain": -0.2900198710855671,
+   "Resting systolic BP": 0.2481283027629699,
+   "Fasting sugar >120 mg/dL": 0.25052836183460386,
+   "ECG ST-T abnormality": 0.3565962350788574,
+   "ECG LVH": 0.0451172861878492,
+   "Total cholesterol": 0.05806335328686541
+  },
+  "note": "Overall CAD only; UCI cohorts do not record which artery is narrowed. `ca` and exercise-test variables excluded. Missing values imputed with training (Z-Alizadeh Sani) medians."
+ },
+ "split_optimism": {
+  "splits": 100,
+  "test_size": 61,
+  "nested_cv": {
+   "accuracy": [
+    0.8448633879781421,
+    0.036768282475467436
+   ],
+   "auc": [
+    0.9283445008883809,
+    0.029440447692166482
+   ]
+  },
+  "single_split_accuracy": {
+   "median": 0.8524590163934426,
+   "p5": 0.7860655737704918,
+   "p95": 0.9180327868852459,
+   "max": 0.9508196721311475
+  },
+  "single_split_auc": {
+   "median": 0.9303344664151778,
+   "p5": 0.8689171122994652,
+   "p95": 0.9693181818181819,
+   "max": 0.9866310160427807
+  },
+  "test_tuned_threshold_accuracy": {
+   "median": 0.8852459016393442,
+   "max": 0.9672131147540983
+  },
+  "share_of_splits_at_or_above_90pct_acc": 0.15
  }
 }

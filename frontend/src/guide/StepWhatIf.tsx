@@ -3,7 +3,7 @@ import { useApp } from '../lib/ctx'
 import { predictLocal } from '../lib/engine'
 import { pct, riskHex } from '../lib/risk'
 import { HeartStage } from './HeartStage'
-import { suggestChanges } from '../components/Modifiable'
+import { suggestChanges, splitChanges, OddFactors } from '../components/Modifiable'
 import { TARGETS, type TargetId } from '../lib/types'
 import { Term } from '../components/Term'
 
@@ -13,7 +13,8 @@ const TNAME: Record<TargetId, string> = { CAD: 'Coronary artery disease', LAD: '
 export function StepWhatIf() {
   const { data, inputs, baseline, onChange, setInputs, pred } = useApp()
   const before = useMemo(() => predictLocal(data.bundle, baseline).targets, [data.bundle, baseline])
-  const tips = useMemo(() => suggestChanges(data.bundle, data.features, inputs).sort((a, b) => a.delta.CAD - b.delta.CAD), [data, inputs])
+  const all = useMemo(() => suggestChanges(data.bundle, data.features, inputs).sort((a, b) => a.delta.CAD - b.delta.CAD), [data, inputs])
+  const { helps: tips, odd } = splitChanges(all, 'CAD')
   const feats = Object.fromEntries(data.features.map((f) => [f.key, f]))
   const changed = Object.keys(inputs).filter((k) => String(inputs[k]) !== String(baseline[k]))
   if (!pred) return null
@@ -60,12 +61,13 @@ export function StepWhatIf() {
                 {tips.map((c) => (
                   <button key={c.key} className="mod" onClick={() => setInputs((s) => ({ ...s, ...c.patch }))}>
                     <span className="mod-l"><b>{c.label}</b><small>{c.from} → {c.to}</small></span>
-                    <span className={`mod-d ${c.delta.CAD < -0.005 ? 'down' : c.delta.CAD > 0.005 ? 'up' : ''}`}>{c.delta.CAD > 0 ? '+' : c.delta.CAD < 0 ? '−' : '±'}{Math.abs(c.delta.CAD * 100).toFixed(1)} pts</span>
+                    <span className={`mod-d ${c.delta.CAD < -0.005 ? 'down' : ''}`}>{c.delta.CAD < -0.0005 ? '−' : '±'}{Math.abs(c.delta.CAD * 100).toFixed(1)} pts</span>
                   </button>
                 ))}
               </div>
             </>
           )}
+          {odd.length > 0 && <OddFactors odd={odd} target="CAD" />}
         </section>
 
         <section className="card wi-right">

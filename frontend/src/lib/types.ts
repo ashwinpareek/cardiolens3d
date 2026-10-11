@@ -60,4 +60,6 @@ export interface ModelCard {
   subgroups?: Record<string, any>
   shap_check?: any
   ablation?: any
+  external?: any        // ml/external_validation.py
+  split_optimism?: any  // ml/split_optimism.py
 }

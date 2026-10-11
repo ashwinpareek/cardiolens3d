@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useFrame, useThree, ThreeEvent } from '@react-three/fiber'
 import { Html, OrbitControls, useGLTF } from '@react-three/drei'
 import { GLTFLoader } from 'three-stdlib'
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { suspend } from 'suspend-react'
 import { riskColor } from '../lib/risk'
 import { FlowParticles, Centerlines } from './FlowParticles'
@@ -32,6 +33,7 @@ export interface SceneProps {
   compact?: boolean       // small embedded viewer (what-if page)
   shift?: number          // 0..0.5: slide the rendered heart left (fraction of width) to make room for a side panel
   autoRotate?: boolean    // slow showcase turntable, stopped by the parent on first interaction
+  lowPoly?: boolean       // adaptive quality: draw the 12k-triangle myocardium instead of the 60k one
 }
 
 export type FocusId = 'overview' | 'LAD' | 'LCX' | 'RCA' | 'inferior' | 'thorax'
@@ -147,7 +149,7 @@ export function HeartScene(props: SceneProps) {
   // A single-file build embeds the model bytes; parse them directly (no network request at all).
   const embedded = (window as any).__CL_EMBED__?.glbBuffer as ArrayBuffer | undefined
   const gltf: { scene: THREE.Group } = embedded
-    ? suspend(() => new Promise<any>((res, rej) => new GLTFLoader().parse(embedded, '', res, rej)), ['cardiolens-embedded-glb'])
+    ? suspend(() => new Promise<any>((res, rej) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder as any).parse(embedded, '', res, rej)), ['cardiolens-embedded-glb'])
     : useGLTF(`${base}anatomy/${import.meta.env.VITE_STATIC_DEMO === '1' ? 'heart_scene.json' : 'heart_scene.glb'}`, false, true)
   const heartGroup = useRef<THREE.Group>(null!)
   const [hover, setHover] = useState<string | null>(null)
@@ -173,6 +175,7 @@ export function HeartScene(props: SceneProps) {
     myo.m.transparent = true
     const veinMat = new THREE.MeshStandardMaterial({ color: ANATOMY_COLORS.cardiac_veins, roughness: 0.5, transparent: true, opacity: 0.85, clippingPlanes: [clip] })
     const vesselMeshes: THREE.Mesh[] = []
+    const lod: { hi: THREE.Mesh[]; lo: THREE.Mesh[] } = { hi: [], lo: [] }
 
     const root = gltf.scene.clone(true)
     root.traverse((o: THREE.Object3D) => {
@@ -183,8 +186,10 @@ export function HeartScene(props: SceneProps) {
       mesh.userData.partId = part?.id ?? id
       mesh.geometry.computeVertexNormals()
       const pid = mesh.userData.partId as string
-      if (pid === 'heart_wall') {
+      if (pid === 'heart_wall' || pid === 'heart_wall_lo') {
         mesh.material = myo.m
+        mesh.userData.partId = 'heart_wall'   // picking/labels treat both levels of detail as the myocardium
+        ;(pid === 'heart_wall' ? lod.hi : lod.lo).push(mesh)
         meshes.heart.push(mesh)
       } else if (part?.group === 'coronary') {
         const mat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.05, emissiveIntensity: 0.55 })
@@ -243,10 +248,17 @@ export function HeartScene(props: SceneProps) {
     const liftDir: Record<string, THREE.Vector3> = Object.fromEntries(Object.entries(centroid).map(([k, c]) => {
       const d = c.clone(); d.y *= 0.4; return [k, d.normalize()]
     }))
-    return { heart, rest, myo, vesselMats, radial, ghost, lungGhost, fadeMats, thorax, clip, veinMat, vesselMeshes, liftDir, otherMats: [veinMat] }
+    return { lod, heart, rest, myo, vesselMats, radial, ghost, lungGhost, fadeMats, thorax, clip, veinMat, vesselMeshes, liftDir, otherMats: [veinMat] }
   }, [gltf, regById])
 
   // ---- animated state (smoothly interpolated toward targets every frame)
+  // level of detail: low-poly myocardium only when asked for AND present in the model file
+  const lowPoly = !!props.lowPoly && setup.lod.lo.length > 0
+  useEffect(() => {
+    setup.lod.hi.forEach((m) => { m.visible = !lowPoly })
+    setup.lod.lo.forEach((m) => { m.visible = lowPoly })
+  }, [lowPoly, setup])
+
   const anim = useRef({ LAD: 0, LCX: 0, RCA: 0, terr: 1, radius: 40, ghost: 1, phase: 0, cut: 0, angio: 0, lift: 0, shift: 0 })
   const size = useThree((s) => s.size)
   const tmp = useMemo(() => new THREE.Color(), [])

@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { NoteImport } from './NoteImport'
 import type { DatasetPatient, FeatureSpec, Inputs } from '../lib/types'
 
 const GROUP_ORDER = ['Demographics', 'History', 'Symptoms & Exam', 'ECG', 'Laboratory', 'Echocardiography']
@@ -23,6 +24,7 @@ function fmt(v: number, step: number | null) {
 }
 
 export function PatientPanel({ features, inputs, baseline, onChange, onLoad, onReset, patients, presets, source }: Props) {
+  const [note, setNote] = useState(false)
   const groups = useMemo(() => {
     const g: Record<string, FeatureSpec[]> = {}
     for (const f of features) (g[f.group] ??= []).push(f)
@@ -60,6 +62,11 @@ export function PatientPanel({ features, inputs, baseline, onChange, onLoad, onR
             onLoad(p.inputs, `dataset:${p.id}`)
           }}>Random</button>
         </div>
+        <button className="btn note-btn" onClick={() => setNote(true)} title="Fill the inputs from a pasted referral letter or lab report">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M3 1.5h5.5L11 4v8.5H3z M8.5 1.5V4H11 M5 7h4 M5 9.5h4" fill="none" stroke="currentColor" strokeWidth="1.2" /></svg>
+          Import from clinical note
+        </button>
+        {note && <NoteImport onClose={() => setNote(false)} />}
         <div className="chips" role="group" aria-label="Presets">
           {presets.map((p) => (
             <button key={p.id} className="chip" aria-pressed={source === `preset:${p.id}`} onClick={() => onLoad(p.inputs, `preset:${p.id}`)}>

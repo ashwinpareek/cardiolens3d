@@ -154,6 +154,53 @@ function Similar({ features, inputs, patients, onLoadPatient, similarWeights }: 
   )
 }
 
+function ExternalValidation({ ev }: { ev: any }) {
+  const rows: [string, any][] = [['All four cohorts', ev.external.pooled], ...(['Cleveland', 'Hungary', 'Switzerland', 'VA Long Beach'] as const).map((c) => [c, ev.external[c]] as [string, any])]
+  const [im, isd] = ev.internal_nested_cv_auc
+  return (
+    <section className="ev-callout">
+      <h3>External validation: 920 patients from four other hospitals</h3>
+      <p className="hint" style={{ marginTop: 0 }}>A reduced CAD model using only the {ev.features.length} inputs both datasets record ({ev.features.join(', ')}) was trained on all 303 Z-Alizadeh Sani patients and tested, unchanged, on the UCI Heart Disease cohorts. Both use the same label (≥50% narrowing on angiography). Cleveland's <code>ca</code> column was left out because it is effectively part of the answer.</p>
+      <div className="ev-kpis">
+        <div><span>Internal (nested CV)</span><b>{im.toFixed(3)}</b><small>± {isd.toFixed(3)}, same reduced model</small></div>
+        <div><span>External, unseen hospitals</span><b>{ev.external.pooled.auc.toFixed(3)}</b><small>95% CI {ev.external.pooled.auc_ci95[0].toFixed(3)}–{ev.external.pooled.auc_ci95[1].toFixed(3)}</small></div>
+        <div><span>Calibration, pooled</span><b>slope {ev.external.pooled.calibration_slope.toFixed(2)}</b><small>intercept {ev.external.pooled.calibration_intercept.toFixed(2)} (ideal 1 and 0)</small></div>
+        <div><span>Ceiling in those cohorts</span><b>{ev.native_uci_cv_auc.toFixed(3)}</b><small>same inputs, trained there</small></div>
+      </div>
+      <table className="data">
+        <thead><tr><th>Cohort</th><th className="r">n</th><th className="r">CAD prevalence</th><th className="r">ROC-AUC (95% CI)</th><th className="r">Mean predicted</th><th className="r">Brier</th></tr></thead>
+        <tbody>
+          {rows.map(([name, r]) => (
+            <tr key={name} className={name.startsWith('All') ? 'best' : undefined}>
+              <td>{name}</td><td className="r">{r.n}</td><td className="r">{pct(r.prevalence)}</td>
+              <td className="r">{r.auc.toFixed(3)} <span style={{ color: 'var(--muted)' }}>({r.auc_ci95[0].toFixed(2)}–{r.auc_ci95[1].toFixed(2)})</span></td>
+              <td className="r">{pct(r.mean_predicted)}</td><td className="r">{r.brier.toFixed(3)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="hint">The drop from {im.toFixed(2)} to {ev.external.pooled.auc.toFixed(2)} is expected: different countries, decades and referral patterns, and fewer shared inputs. The model still ranks patients well, and across all four cohorts its average risk matches the observed rate. Per hospital, the base rate differs (Switzerland: {pct(ev.external.Switzerland.prevalence)} had CAD), so the decision threshold would need local recalibration before use. Overall CAD only: these cohorts do not record which artery is narrowed.</p>
+    </section>
+  )
+}
+
+function SplitOptimism({ so }: { so: any }) {
+  const a = so.single_split_accuracy
+  return (
+    <section className="ev-callout">
+      <h3>Why our accuracy is {pct(so.nested_cv.accuracy[0])}, not 95%</h3>
+      <p className="hint" style={{ marginTop: 0 }}>We ran the exact same pipeline on {so.splits} different random 80/20 train/test splits, the protocol behind most reported numbers on this dataset. With only {so.test_size} test patients, accuracy depends heavily on which patients land in the test set.</p>
+      <div className="ev-kpis">
+        <div><span>Honest estimate (nested CV)</span><b>{pct(so.nested_cv.accuracy[0], 1)}</b><small>AUC {so.nested_cv.auc[0].toFixed(3)}</small></div>
+        <div><span>Single split, typical</span><b>{pct(a.median, 1)}</b><small>5–95%: {pct(a.p5)} to {pct(a.p95)}</small></div>
+        <div><span>Single split, luckiest</span><b>{pct(a.max, 1)}</b><small>AUC up to {so.single_split_auc.max.toFixed(3)}</small></div>
+        <div><span>Threshold tuned on test set</span><b>{pct(so.test_tuned_threshold_accuracy.max, 1)}</b><small>a leaky shortcut</small></div>
+      </div>
+      <p className="hint">Same model, same data: {Math.round(so.share_of_splits_at_or_above_90pct_acc * 100)}% of single splits show 90% or more. Picking a lucky split, or tuning the threshold on the test patients, can report 95%+. Our figure averages 25 outer folds (5 folds × 5 repeats) in which every choice was made without seeing the test patients.</p>
+    </section>
+  )
+}
+
 /* ------------------------------------------------------------------ evidence */
 export function Evidence({ card }: { card: ModelCard }) {
   const t = card.targets
@@ -182,6 +229,8 @@ export function Evidence({ card }: { card: ModelCard }) {
         </tbody>
       </table>
       <p className="hint">Mean ± SD over {card.targets.CAD.n_folds} outer folds of repeated, nested, stratified cross-validation (5 folds × {card.targets.CAD.n_folds / 5} repeats). Hyper-parameters, calibration, thresholds and conformal quantiles were all fit inside each training fold, and LAD, LCX, RCA and Cath were never inputs.</p>
+      {card.external && <ExternalValidation ev={card.external} />}
+      {card.split_optimism && <SplitOptimism so={card.split_optimism} />}
       <div className="evidence-grid">
         <figure>
           <figcaption>ROC curves<small>Pooled out-of-fold predictions</small></figcaption>
@@ -220,6 +269,7 @@ export function Evidence({ card }: { card: ModelCard }) {
           ))}
         </tbody>
       </table>
+      <p className="hint">Differences between the top algorithms are well inside the fold-to-fold noise (about ±0.05 AUC on 61-patient test folds). LightGBM's LCX 0.730 versus 0.706 here is not a real gap, so the exactly explainable, calibrated additive model was kept rather than chasing the higher number.</p>
       <h3 style={{ marginTop: 18 }}>Subgroups (ROC-AUC, out-of-fold)</h3>
       <table className="data">
         <thead><tr><th>Group</th><th className="r">n</th>{TARGETS.map((id) => <th key={id} className="r">{id}</th>)}</tr></thead>
@@ -244,6 +294,14 @@ export function Evidence({ card }: { card: ModelCard }) {
           )}
         </tbody>
       </table>
+      <h3 style={{ marginTop: 18 }}>Limitations</h3>
+      <ul className="limits">
+        <li><b>Small, single-centre training set:</b> 303 patients from one hospital in Tehran. Cross-validation estimates carry wide uncertainty (see the ± values).</li>
+        <li><b>Transfer to other hospitals is lower:</b> on four external cohorts the overall CAD estimate kept useful discrimination{card.external ? ` (AUC ${card.external.external.pooled.auc.toFixed(2)})` : ''}, but its threshold needs local recalibration. Individual arteries could not be tested externally.</li>
+        <li><b>Whole-vessel labels only:</b> the data say whether an artery has a ≥50% narrowing, not where along it. Colour on the 3D model is a probability for the whole vessel, not a located lesion.</li>
+        <li><b>Associations, not causes:</b> what-if changes show how the model responds, not what a treatment would do. Some factors move the "wrong" way in this data (for example, people already treated for high cholesterol).</li>
+        <li><b>Not a medical device:</b> for education and decision support only. Not validated for clinical use.</li>
+      </ul>
     </>
   )
 }

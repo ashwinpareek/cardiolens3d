@@ -1,0 +1,22 @@
+{
+ "CAD.auc": 0.9283445008883809,
+ "CAD.accuracy": 0.8448633879781421,
+ "CAD.brier": 0.09801262521308843,
+ "CAD.conformal_coverage": 0.9003300330033003,
+ "LAD.auc": 0.8492720081203938,
+ "LAD.accuracy": 0.771049180327869,
+ "LAD.brier": 0.1545222863240848,
+ "LAD.conformal_coverage": 0.8943894389438944,
+ "LCX.auc": 0.706135975994218,
+ "LCX.accuracy": 0.6430054644808743,
+ "LCX.brier": 0.20732813711136797,
+ "LCX.conformal_coverage": 0.8831683168316832,
+ "RCA.auc": 0.7378337845045011,
+ "RCA.accuracy": 0.6422841530054645,
+ "RCA.brier": 0.19773472571076245,
+ "RCA.conformal_coverage": 0.8917491749174917,
+ "violations": 0,
+ "external.pooled_auc": 0.7563994091749962,
+ "external.internal_auc": 0.9032097997761471,
+ "split_optimism.max_accuracy": 0.9508196721311475
+}

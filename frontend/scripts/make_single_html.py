@@ -1,9 +1,9 @@
 """Bundle the built app, its data and the 3D model into ONE self-contained HTML file (no server, no network).
 
     cd frontend && VITE_STATIC_DEMO=1 npx vite build --outDir /tmp/cl_build
-    python scripts/make_single_html.py /tmp/cl_build <uncompressed heart_scene.glb> CardioLens3D.html
+    python scripts/make_single_html.py /tmp/cl_build public/anatomy/heart_scene.glb CardioLens3D.html
 
-Use an uncompressed GLB (straight from anatomy/build_anatomy.py, before the meshopt step).
+(or simply `make single` from the repository root). Meshopt-compressed and plain GLBs both work.
 """
 import json, base64, glob, sys
 B, glbpath, out, csp = sys.argv[1], sys.argv[2], sys.argv[3], (sys.argv[4] if len(sys.argv) > 4 else '')

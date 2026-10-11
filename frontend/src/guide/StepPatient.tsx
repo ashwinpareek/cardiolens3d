@@ -4,6 +4,7 @@ import { predictLocal } from '../lib/engine'
 import { pct, riskBand, riskHex } from '../lib/risk'
 import { PatientPanel } from '../components/PatientPanel'
 import { Term } from '../components/Term'
+import { NoteImport } from '../components/NoteImport'
 import type { FeatureSpec, Inputs } from '../lib/types'
 
 interface Persona { id: string; title: string; who: string; detail: string; inputs: Inputs; truth?: string }
@@ -28,6 +29,7 @@ export function StepPatient({ onNext }: { onNext: () => void }) {
   const app = useApp()
   const { data, inputs, load, onChange, source, pred } = app
   const [all, setAll] = useState(false)
+  const [note, setNote] = useState(false)
 
   const personas: Persona[] = useMemo(() => {
     const list: Persona[] = data.presets.filter((p) => p.id !== 'median').map((p) => ({
@@ -63,6 +65,11 @@ export function StepPatient({ onNext }: { onNext: () => void }) {
       <section className="page-head">
         <h2>Who are we looking at?</h2>
         <p>Pick an example patient, or describe your own with the questions below. Everything updates as you go, and you can change any answer later.</p>
+        <button className="btn note-btn" onClick={() => setNote(true)}>
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M3 1.5h5.5L11 4v8.5H3z M8.5 1.5V4H11 M5 7h4 M5 9.5h4" fill="none" stroke="currentColor" strokeWidth="1.2" /></svg>
+          Have a doctor's letter or lab report? Paste it instead
+        </button>
+        {note && <NoteImport onClose={() => setNote(false)} />}
       </section>
 
       <section className="personas" aria-label="Example patients">

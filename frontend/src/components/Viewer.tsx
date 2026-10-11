@@ -1,7 +1,7 @@
 import { Suspense, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { AdaptiveDpr } from '@react-three/drei'
 import { HeartScene, AnatomyPart, ViewMode } from '../three/HeartScene'
+import { useAdaptiveQuality, FpsProbe, QualityBadge, SHOW_FPS } from '../three/Adaptive'
 import type { Centerlines } from '../three/FlowParticles'
 import { riskGradientCss } from '../lib/risk'
 import type { VesselId } from '../lib/types'
@@ -28,26 +28,29 @@ export function Viewer(p: Props) {
   const [spin, setSpin] = useState(!reduced)
   const toggle = (k: keyof typeof layers) => setLayers((s) => ({ ...s, [k]: !s[k] }))
   const stop = () => spin && setSpin(false)
+  const q = useAdaptiveQuality()
+  const [fps, setFps] = useState<number | null>(null)
 
   return (
     <div className={`lightbox ${angio ? 'is-angio' : ''}`} onPointerDown={stop} onWheel={stop}>
       <Canvas
         camera={{ position: [1.25, 0.45, 2.75], fov: 35, near: 0.05, far: 60 }}
-        dpr={[1, 1.75]}
+        dpr={q.dpr}
         gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}
         frameloop="always"
       >
-        <AdaptiveDpr pixelated={false} />
+        {q.monitor}
+        <FpsProbe onFps={SHOW_FPS ? setFps : undefined} />
         <Suspense fallback={null}>
           <HeartScene
             {...p}
             view={view}
             territory={layers.territory}
-            flow={layers.flow && !reduced}
+            flow={layers.flow && !reduced && q.tier >= 2}
             labels={layers.labels}
-            beating={layers.beating && !reduced}
+            beating={layers.beating && !reduced && q.tier >= 1}
             lift={lift} cut={cut} angio={angio}
-            autoRotate={spin}
+            autoRotate={spin} lowPoly={q.tier === 0}
           />
         </Suspense>
       </Canvas>
@@ -72,6 +75,7 @@ export function Viewer(p: Props) {
         <div className="lb-note">Drag to rotate, scroll to zoom, click an artery to inspect it. Colour is a whole-vessel probability: the dataset does not record where along a vessel a lesion sits.</div>
       </div>
 
+      <QualityBadge tier={q.tier} fps={fps} />
       <div className="legend" aria-hidden>
         Predicted stenosis probability
         <div className="bar" style={{ background: riskGradientCss }} />
