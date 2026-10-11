@@ -98,7 +98,9 @@ Overall CAD only (the UCI cohorts have no per-artery labels). Reduced model on 1
 | VA Long Beach | 200 | 75% | 0.636 (0.55–0.72) |
 | **All four** | **920** | 55% | **0.756 (0.725–0.787)** |
 
-Internal nested-CV AUC of the same reduced model: 0.903 ± 0.043. The same inputs trained *inside* UCI reach 0.839, an upper bound for transfer. Pooled calibration intercept 0.03, slope 1.00; per hospital, the base rate differs, so the decision threshold would need local recalibration.
+> **Scope:** this is a separate reduced model for overall CAD only, not the deployed 54-input four-target model. The LAD, LCX and RCA predictions have no external validation.
+
+Internal nested-CV AUC of the same reduced model: 0.903 ± 0.043. The same inputs trained *inside* UCI reach 0.839, an upper bound for transfer. Pooled calibration intercept 0.03, slope 1.00; but the threshold chosen at the training hospital (0.70) is too strict elsewhere: sensitivity 39%, specificity 88% (at 0.5: 78% / 63%). Ranking transfers; the cut-off does not, so a new hospital must set its own threshold.
 
 ### Why our accuracy is 84.5%, not 95%
 
@@ -156,6 +158,8 @@ make install     # pinned Python + Node dependencies
 make reproduce   # retrain → external validation → split study → compare 20 metrics with ml/results/expected_metrics.json → tests
 make single      # CardioLens3D.html: the whole app in one offline file
 ```
+
+`make e2e` drives the whole app in a real browser (19 checks): both views, clinical-note import, both PDF exports against the on-screen numbers, a browser with WebGL disabled (falls back to a 2D artery diagram), and the FastAPI server versus the in-browser engine, including fallback when the server stops.
 
 `make reproduce` takes about 5 minutes on 2 CPU cores and regenerates a byte-identical model bundle. `make test` includes tests that fail if `LAD`, `LCX`, `RCA` or `Cath` ever reach the model's inputs, its exported weights or the app's input schema.
 

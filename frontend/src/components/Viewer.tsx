@@ -4,6 +4,7 @@ import { HeartScene, AnatomyPart, ViewMode } from '../three/HeartScene'
 import { useAdaptiveQuality, FpsProbe, QualityBadge, SHOW_FPS } from '../three/Adaptive'
 import type { Centerlines } from '../three/FlowParticles'
 import { riskGradientCss } from '../lib/risk'
+import { Fallback2D, GLBoundary, WEBGL_OK } from './Fallback2D'
 import type { VesselId } from '../lib/types'
 
 interface Props {
@@ -33,6 +34,8 @@ export function Viewer(p: Props) {
 
   return (
     <div className={`lightbox ${angio ? 'is-angio' : ''}`} onPointerDown={stop} onWheel={stop}>
+      {WEBGL_OK ? (
+      <GLBoundary fallback={<Fallback2D risks={p.risks} uncertain={p.uncertain} selected={p.selected} onSelect={p.onSelect} />}>
       <Canvas
         camera={{ position: [1.25, 0.45, 2.75], fov: 35, near: 0.05, far: 60 }}
         dpr={q.dpr}
@@ -54,6 +57,8 @@ export function Viewer(p: Props) {
           />
         </Suspense>
       </Canvas>
+      </GLBoundary>
+      ) : <Fallback2D risks={p.risks} uncertain={p.uncertain} selected={p.selected} onSelect={p.onSelect} />}
 
       <div className="overlay-top">
         <div className="toolbar" role="group" aria-label="View">

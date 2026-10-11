@@ -149,6 +149,14 @@ def main():
     f2 = model().fit(Xz[cols2], yz)
     p2 = f2.predict_proba(Xu[cols2])[:, 1]
 
+    # operating points: the threshold carried over from training vs simpler alternatives (no refitting)
+    def op(th):
+        yh = pu >= th
+        return {"threshold": float(th), "sensitivity": float((yh & (yu == 1)).sum() / yu.sum()),
+                "specificity": float((~yh & (yu == 0)).sum() / (yu == 0).sum())}
+    operating_points = [{"name": "Training-site threshold (Youden on Z-Alizadeh Sani)", **op(t)},
+                        {"name": "Fixed 0.5", **op(0.5)}]
+
     lr = final.best_estimator_.named_steps["logisticregression"]
     res = {
         "source_sha256": hashlib.sha256(UCI.read_bytes()).hexdigest(),
@@ -158,6 +166,9 @@ def main():
         "internal_nested_cv_auc": [float(np.mean(aucs)), float(np.std(aucs))],
         "threshold": t,
         "external": ext,
+        "operating_points": operating_points,
+        "scope": "Reduced 10-input model for overall CAD only. It is NOT the deployed 54-input four-target model; "
+                 "LAD/LCX/RCA predictions have no external validation.",
         "external_without_cholesterol_auc": float(roc_auc_score(yu, p2)),
         "native_uci_cv_auc": float(roc_auc_score(yu, native)),
         "coefficients_per_sd": {LABELS[c]: float(w) for c, w in zip(COLS, lr.coef_[0])},

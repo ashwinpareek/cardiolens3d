@@ -160,7 +160,10 @@ function ExternalValidation({ ev }: { ev: any }) {
   return (
     <section className="ev-callout">
       <h3>External validation: 920 patients from four other hospitals</h3>
-      <p className="hint" style={{ marginTop: 0 }}>A reduced CAD model using only the {ev.features.length} inputs both datasets record ({ev.features.join(', ')}) was trained on all 303 Z-Alizadeh Sani patients and tested, unchanged, on the UCI Heart Disease cohorts. Both use the same label (≥50% narrowing on angiography). Cleveland's <code>ca</code> column was left out because it is effectively part of the answer.</p>
+      <div className="ev-scope" role="note">
+        <b>What this tests:</b> a separate, reduced <b>10-input model for overall CAD only</b>, built because the external hospitals recorded only these inputs. It is <b>not</b> the deployed 54-input model, and the <b>LAD, LCX and RCA predictions have no external validation</b> (those cohorts do not record which artery is narrowed).
+      </div>
+      <p className="hint">The reduced model using only the {ev.features.length} inputs both datasets record ({ev.features.join(', ')}) was trained on all 303 Z-Alizadeh Sani patients and tested, unchanged, on the UCI Heart Disease cohorts. Both use the same label (≥50% narrowing on angiography). Cleveland's <code>ca</code> column was left out because it is effectively part of the answer.</p>
       <div className="ev-kpis">
         <div><span>Internal (nested CV)</span><b>{im.toFixed(3)}</b><small>± {isd.toFixed(3)}, same reduced model</small></div>
         <div><span>External, unseen hospitals</span><b>{ev.external.pooled.auc.toFixed(3)}</b><small>95% CI {ev.external.pooled.auc_ci95[0].toFixed(3)}–{ev.external.pooled.auc_ci95[1].toFixed(3)}</small></div>
@@ -179,6 +182,20 @@ function ExternalValidation({ ev }: { ev: any }) {
           ))}
         </tbody>
       </table>
+      {ev.operating_points && (
+        <>
+          <h4 className="ev-sub">Decision threshold at the new hospitals</h4>
+          <table className="data">
+            <thead><tr><th>Threshold</th><th className="r">Value</th><th className="r">Sensitivity</th><th className="r">Specificity</th></tr></thead>
+            <tbody>
+              {ev.operating_points.map((o: any) => (
+                <tr key={o.name}><td>{o.name}</td><td className="r">{o.threshold.toFixed(2)}</td><td className="r">{pct(o.sensitivity)}</td><td className="r">{pct(o.specificity)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="hint">The threshold chosen at the training hospital (where 71% of patients had CAD) is too strict elsewhere: it misses most diseased patients ({pct(ev.operating_points[0].sensitivity)} sensitivity). Ranking (AUC) transfers; the cut-off does not. Any new hospital would need to set its own threshold on local data before use.</p>
+        </>
+      )}
       <p className="hint">The drop from {im.toFixed(2)} to {ev.external.pooled.auc.toFixed(2)} is expected: different countries, decades and referral patterns, and fewer shared inputs. The model still ranks patients well, and across all four cohorts its average risk matches the observed rate. Per hospital, the base rate differs (Switzerland: {pct(ev.external.Switzerland.prevalence)} had CAD), so the decision threshold would need local recalibration before use. Overall CAD only: these cohorts do not record which artery is narrowed.</p>
     </section>
   )
@@ -188,7 +205,7 @@ function SplitOptimism({ so }: { so: any }) {
   const a = so.single_split_accuracy
   return (
     <section className="ev-callout">
-      <h3>Why our accuracy is {pct(so.nested_cv.accuracy[0])}, not 95%</h3>
+      <h3>Why our accuracy is {pct(so.nested_cv.accuracy[0], 1)}, not 95%</h3>
       <p className="hint" style={{ marginTop: 0 }}>We ran the exact same pipeline on {so.splits} different random 80/20 train/test splits, the protocol behind most reported numbers on this dataset. With only {so.test_size} test patients, accuracy depends heavily on which patients land in the test set.</p>
       <div className="ev-kpis">
         <div><span>Honest estimate (nested CV)</span><b>{pct(so.nested_cv.accuracy[0], 1)}</b><small>AUC {so.nested_cv.auc[0].toFixed(3)}</small></div>

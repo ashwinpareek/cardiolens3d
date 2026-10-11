@@ -3,7 +3,7 @@ PY ?= python
 export PYTHONWARNINGS := ignore::FutureWarning,ignore::UserWarning
 FE := frontend
 
-.PHONY: help install train external optimism results reproduce check test build single serve clean
+.PHONY: help install train external optimism results reproduce check test e2e build single serve clean
 
 help:            ## list targets
 	@grep -E "^[a-z]+:.*##" Makefile | sed "s/:.*##/ -/"
@@ -31,6 +31,9 @@ check:           ## compare metrics with ml/results/expected_metrics.json (toler
 
 test:            ## leakage, engine parity (Python = sklearn = browser to 1e-9), API contract
 	$(PY) -m pytest -q tests
+
+e2e: single build ## browser test of the whole journey: expert, note import, PDFs, guided steps, no-WebGL, server parity
+	$(PY) tests/e2e/smoke.py
 
 build:           ## production web build (served by the FastAPI backend)
 	cd $(FE) && npm run build

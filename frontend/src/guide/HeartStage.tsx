@@ -5,6 +5,7 @@ import { HeartScene, FocusId } from '../three/HeartScene'
 import { EcgStrip } from '../components/EcgStrip'
 import { Term } from '../components/Term'
 import { useApp } from '../lib/ctx'
+import { Fallback2D, GLBoundary, WEBGL_OK } from '../components/Fallback2D'
 import { pct, riskGradientCss } from '../lib/risk'
 import { rank } from '../lib/format'
 import type { VesselId } from '../lib/types'
@@ -101,6 +102,8 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className={`stage ${angio ? 'is-angio' : ''} ${compact ? 'is-compact' : ''}`}>
+      {WEBGL_OK ? (
+      <GLBoundary fallback={<Fallback2D risks={risks} uncertain={uncertain} selected={selected} onSelect={(v) => { setSelected(v); app.setExplainTarget(v ?? 'CAD') }} compact={compact} />}>
       <Canvas camera={{ position: compact ? [1.6, 0.5, 3.2] : [1.25, 0.45, 2.75], fov: 35, near: 0.05, far: 60 }}
         dpr={q.dpr} gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}>
         {q.monitor}
@@ -113,6 +116,8 @@ export function HeartStage({ compact = false }: { compact?: boolean }) {
             shift={tour != null && wide ? 0.1 : 0} lowPoly={q.tier === 0} />
         </Suspense>
       </Canvas>
+      </GLBoundary>
+      ) : <Fallback2D risks={risks} uncertain={uncertain} selected={selected} onSelect={(v) => { setSelected(v); app.setExplainTarget(v ?? 'CAD') }} compact={compact} />}
 
       {!compact && (
         <>

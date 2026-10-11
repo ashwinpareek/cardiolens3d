@@ -4005,6 +4005,21 @@
     "calibration_slope": 0.4861216420447886
    }
   },
+  "operating_points": [
+   {
+    "name": "Training-site threshold (Youden on Z-Alizadeh Sani)",
+    "threshold": 0.6994525940859285,
+    "sensitivity": 0.39096267190569745,
+    "specificity": 0.8759124087591241
+   },
+   {
+    "name": "Fixed 0.5",
+    "threshold": 0.5,
+    "sensitivity": 0.7760314341846758,
+    "specificity": 0.6301703163017032
+   }
+  ],
+  "scope": "Reduced 10-input model for overall CAD only. It is NOT the deployed 54-input four-target model; LAD/LCX/RCA predictions have no external validation.",
   "external_without_cholesterol_auc": 0.7586389036276464,
   "native_uci_cv_auc": 0.8394686399074565,
   "coefficients_per_sd": {
