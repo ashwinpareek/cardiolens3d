@@ -247,6 +247,24 @@ data/          the dataset (CC BY 4.0); external/ the UCI Heart Disease test coh
 - Vessel-level discrimination is lower in patients ≥ 60 and in diabetics (see subgroups in the model card).
 - Some associations reflect treatment rather than biology. For example, lower LDL is linked to higher risk, plausibly because patients with known disease are already on statins. The "Modifiable factors" panel never offers such a change as advice: it is collapsed under a labelled "dataset artifact" note.
 
+## AI assistance (disclosure)
+
+This project was built with AI coding assistants, as the hackathon rules allow. In line with the rules, here is what was AI-assisted.
+
+**Tools used:** Claude (Anthropic) through Claude Code, as the main coding assistant; ChatGPT (OpenAI) and Grok (xAI) for independent reviews of the app.
+
+| Part | How it was made |
+|---|---|
+| Machine-learning pipeline (`ml/`): features, CardioModel, nested CV, calibration, conformal sets, SHAP checks, external validation, split study | Code written with Claude from my direction; I chose the track, the dataset handling and leakage rules, and reviewed and ran every experiment. |
+| Backend (`backend/`), browser engine, tests (`tests/`), Makefile, Docker | Written with Claude; I ran the tests and the reproduction (`make reproduce`, `make e2e`) and checked the results. |
+| 3D anatomy pipeline (`anatomy/`) and 3D viewer (`frontend/src/three/`) | Written with Claude; mesh source is BodyParts3D. |
+| Web app UI (`frontend/`): expert view, guided view, explanations, what-if, PDF report, clinical-note import | Written with Claude, shaped by my feedback over many iterations (e.g. guided mode for beginners, opening on the 3D heart, ECG off by default, tooltip and layout fixes). |
+| Ideas from reviews | ChatGPT and Grok reviewed builds; I decided which suggestions to keep (e.g. external validation, WebGL fallback, end-to-end testing) and they were implemented with Claude. |
+| Documentation, README, demo script, Devpost text | Drafted with Claude, edited and approved by me. |
+| Not AI-generated | The datasets (Z-Alizadeh Sani; UCI Heart Disease) and the BodyParts3D anatomy are third-party sources, credited below. Every number reported here is produced by code in this repository and can be regenerated with `make reproduce`. |
+
+I am responsible for everything in this submission and can explain how each part works.
+
 ## Credits and licences
 
 - **Dataset:** Alizadehsani R., Roshanzamir M., Sani Z. (2013). *Extention of Z-Alizadeh Sani dataset.* UCI Machine Learning Repository. [doi:10.24432/C5461K](https://doi.org/10.24432/C5461K). CC BY 4.0.
