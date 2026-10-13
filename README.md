@@ -12,6 +12,8 @@ pinned: false
 
 **Coronary artery disease risk, mapped onto a real 3D heart, with the reasons behind every number.**
 
+**Live demo: [cardiolens3d.vercel.app](https://cardiolens3d.vercel.app)** · runs entirely in your browser, no install, no GPU needed
+
 CardioLens takes 54 routine clinical inputs (demographics, history, examination, ECG, labs, echo) and predicts:
 
 - overall coronary artery disease (CAD)
