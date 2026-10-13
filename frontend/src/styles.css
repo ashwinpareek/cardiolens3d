@@ -783,4 +783,4 @@ table.data th { z-index: 2; box-shadow: 0 1px 0 var(--line); }
 .fallback-note b { color: #fff; }
 
 /* tabular digits only where numbers line up (in this font, tabular figures also widen commas and full stops) */
-td.r, th.r, .headline .big, .ticks, .qs-val, .ba-p, .ba-d, .mod-d, .engine, .vitals, .headline, .ev-kpis b, .note-count, .g-pill, .vlabel, .persona-risk, .stage-legend { font-variant-numeric: tabular-nums; }
+td.r, th.r, .headline .big, .ticks, .qs-val, .ba-p, .ba-d, .mod-d, .engine, .vitals, .headline, .note-count, .g-pill, .vlabel, .persona-risk, .stage-legend { font-variant-numeric: tabular-nums; }
