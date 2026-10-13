@@ -162,16 +162,8 @@ export function buildPdf(r: ReportInput): jsPDF {
   return doc
 }
 
-/** Save a generated file. Inside the claude.ai artifact viewer the page cannot download directly, so it
- *  asks the viewer through the `downloads` capability; everywhere else it uses a normal download link. */
+/** Save a generated file through a normal download link (works offline and in the single-file build). */
 export async function downloadBlob(name: string, blob: Blob): Promise<'saved' | 'declined' | 'link'> {
-  const claude = (window as any).claude
-  if (claude?.use) {
-    const dl = await claude.use('downloads').catch(() => null)
-    if (dl) {
-      try { await dl.save({ filename: name, data: blob }); return 'saved' } catch (e: any) { if (e?.code === 'declined') return 'declined' }
-    }
-  }
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = name
