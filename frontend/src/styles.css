@@ -40,7 +40,6 @@ body {
   font-size: var(--fs-m);
   color: var(--ink);
   background: var(--paper);
-  font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
 }
 button, input, select { font: inherit; color: inherit; }
@@ -782,3 +781,6 @@ table.data th { z-index: 2; box-shadow: 0 1px 0 var(--line); }
 .fallback2d.is-compact { padding: 10px; }
 .fallback-note { max-width: 460px; margin: 0; text-align: center; font-size: var(--fs-s); color: #c9d6de; line-height: 1.45; background: rgba(10,22,33,0.6); padding: 8px 12px; border-radius: 8px; }
 .fallback-note b { color: #fff; }
+
+/* tabular digits only where numbers line up (in this font, tabular figures also widen commas and full stops) */
+td.r, th.r, .headline .big, .ticks, .qs-val, .ba-p, .ba-d, .mod-d, .engine, .vitals, .headline, .ev-kpis b, .note-count, .g-pill, .vlabel, .persona-risk, .stage-legend { font-variant-numeric: tabular-nums; }
